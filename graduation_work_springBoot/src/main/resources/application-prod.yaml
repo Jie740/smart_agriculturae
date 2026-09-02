@@ -1,0 +1,49 @@
+spring:
+  datasource:
+    mysql:
+      username: ${MYSQL_USER:root}
+      password: ${MYSQL_PASSWORD:}
+      url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:smart_agriculture}?useUnicode=true&characterEncoding=UTF-8&useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    postgres:
+      jdbc-url: jdbc:postgresql://${PG_HOST:localhost}:${PG_PORT:5432}/${PG_DB:agriculture_ai}
+      username: ${PG_USER:postgres}
+      password: ${PG_PASSWORD:}
+      driver-class-name: org.postgresql.Driver
+
+  cache:
+    type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      database: 0
+
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://minio:9000}
+  accessKey: ${MINIO_ACCESS_KEY:admin}
+  secretKey: ${MINIO_SECRET_KEY:}
+  bucketName: ${MINIO_BUCKET_NAME:agriculture}
+
+ai:
+  embedding:
+    api-key: ${AL_API_KEY:}
+    base-url: ${AI_EMBEDDING_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+    model-name: ${AI_EMBEDDING_MODEL:text-embedding-v3}
+    dimensions: ${AI_EMBEDDING_DIMENSIONS:1024}
+  pgvector:
+    host: ${PG_HOST:localhost}
+    port: ${PG_PORT:5432}
+    database: ${PG_DB:agriculture_ai}
+    user: ${PG_USER:postgres}
+    password: ${PG_PASSWORD:}
+    table: ${PGVECTOR_TABLE:ai_rag_embedding}
+    dimension: ${PGVECTOR_DIMENSION:1024}
+    use-index: ${PGVECTOR_USE_INDEX:false}
+    index-list-size: ${PGVECTOR_INDEX_LIST_SIZE:100}
+    drop-existing: ${PGVECTOR_DROP_EXISTING:false}
+
+logging:
+  level:
+    com.clj.mapper: warn
+    root: info

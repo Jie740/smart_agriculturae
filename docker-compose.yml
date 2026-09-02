@@ -1,4 +1,7 @@
 services:
+  # ============================================================
+  # Backend - Spring Boot
+  # ============================================================
   backend:
     build:
       context: ./graduation_work_springBoot
@@ -6,6 +9,7 @@ services:
     restart: always
     expose:
       - "8080"
+
     environment:
       SPRING_PROFILES_ACTIVE: prod
 
@@ -33,6 +37,7 @@ services:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minio_password_123}
       MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-agriculture}
 
+      # 阿里云 DashScope
       AL_API_KEY: ${AL_API_KEY:?Please set AL_API_KEY in .env}
 
     depends_on:
@@ -41,6 +46,9 @@ services:
       - redis
       - minio
 
+  # ============================================================
+  # Frontend - Vue + Nginx
+  # ============================================================
   frontend:
     build:
       context: ./graduation_work_vue
@@ -52,7 +60,14 @@ services:
       - backend
 
   # ============================================================
-  # Docker 独立 MySQL
+  # MySQL
+  # 与服务器原有 MySQL 完全独立
+  #
+  # 宿主机:
+  #   3307
+  #
+  # Docker 内部:
+  #   mysql:3306
   # ============================================================
   mysql:
     image: mysql:8.0
@@ -63,7 +78,6 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-123456}
       MYSQL_DATABASE: ${MYSQL_DB:-smart_agriculture}
 
-    # 宿主机 3307 -> Docker MySQL 3306
     ports:
       - "3307:3306"
 
@@ -74,6 +88,10 @@ services:
 
   # ============================================================
   # PostgreSQL + pgvector
+  #
+  # 不映射宿主机端口，只允许 Compose 内部访问
+  # Docker 内部:
+  #   postgres:5432
   # ============================================================
   postgres:
     image: pgvector/pgvector:pg16
@@ -90,6 +108,10 @@ services:
 
   # ============================================================
   # Redis
+  #
+  # 不映射宿主机端口
+  # Docker 内部:
+  #   redis:6379
   # ============================================================
   redis:
     image: redis:7
@@ -98,6 +120,13 @@ services:
 
   # ============================================================
   # MinIO
+  #
+  # 宿主机:
+  #   9002 -> MinIO API 9000
+  #   9003 -> MinIO Console 9001
+  #
+  # Docker 内部:
+  #   minio:9000
   # ============================================================
   minio:
     image: minio/minio
@@ -111,12 +140,15 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minio_password_123}
 
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9002:9000"
+      - "9003:9001"
 
     volumes:
       - minio_data:/data
 
+# ==============================================================
+# Volumes
+# ==============================================================
 volumes:
   mysql_data:
   pg_data:

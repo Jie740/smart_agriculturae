@@ -1,5 +1,7 @@
 package com.clj.ai.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,13 +19,15 @@ import java.util.Map;
 public class RagSearchResultVo {
 
     /**
-     * 文档ID
+     * 文档ID（雪花 ID，序列化为字符串避免前端精度丢失）
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long documentId;
 
     /**
-     * Chunk ID
+     * Chunk ID（雪花 ID，序列化为字符串避免前端精度丢失）
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long chunkId;
 
     /**
@@ -32,8 +36,9 @@ public class RagSearchResultVo {
     private String content;
 
     /**
-     * 所属知识库ID
+     * 所属知识库ID（雪花 ID，序列化为字符串避免前端精度丢失）
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long knowledgeBaseId;
 
     /**

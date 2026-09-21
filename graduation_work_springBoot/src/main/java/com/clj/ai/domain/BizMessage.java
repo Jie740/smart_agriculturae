@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.clj.ai.config.JsonbTypeHandler;
 import java.util.Date;
 import lombok.Data;
 
@@ -11,13 +12,13 @@ import lombok.Data;
  * AI聊天消息表
  * @TableName biz_message
  */
-@TableName(value ="biz_message")
+@TableName(value ="biz_message", autoResultMap = true)
 @Data
 public class BizMessage {
     /**
      * 主键ID
      */
-    @TableId
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
@@ -33,17 +34,20 @@ public class BizMessage {
     /**
      * 消息内容JSON
      */
-    private Object contentJson;
+    @TableField(typeHandler = JsonbTypeHandler.class)
+    private String contentJson;
 
     /**
      * 推理过程及工具调用轨迹JSON
      */
-    private Object traceJson;
+    @TableField(typeHandler = JsonbTypeHandler.class)
+    private String traceJson;
 
     /**
      * 扩展属性JSON
      */
-    private Object attributes;
+    @TableField(typeHandler = JsonbTypeHandler.class)
+    private String attributes;
 
     /**
      * 逻辑删除标识

@@ -13,6 +13,8 @@ public class AiKnowledgeBaseDto {
      */
     private String name;
 
+    private Long typeId;
+
     /**
      * 知识库描述
      */

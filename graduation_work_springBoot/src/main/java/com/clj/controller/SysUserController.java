@@ -46,6 +46,13 @@ public class SysUserController {
         return Result.success();
     }
 
+    @PutMapping("/profile")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
+    public Result<Void> updateCurrentUser(@RequestBody SysUser user) {
+        sysUserService.updateCurrentUser(user);
+        return Result.success();
+    }
+
     @GetMapping("/page/{pageNum}/{pageSize}")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
     public Result<Page<SysUser>> getUsersByPage(@PathVariable("pageNum") Integer pageNum,

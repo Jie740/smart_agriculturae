@@ -387,8 +387,8 @@
             <span class="user-info">
               <el-avatar
                 :size="32"
-                src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png"
-              ></el-avatar>
+                :src="userAvatar"
+              >{{ userName?.charAt(0) }}</el-avatar>
               <span>{{ userName }}</span>
               <el-icon><ArrowDown /></el-icon>
             </span>
@@ -445,14 +445,16 @@ const route = useRoute()
 // 响应式数据
 const sidebarCollapsed = ref(false)
 const userRole = ref(localStorage.getItem('role') || '')
-const userName = ref('')
+const userName = ref(localStorage.getItem('nickname') || localStorage.getItem('username') || '')
+const userAvatar = ref(localStorage.getItem('avatar') || '')
 
 // 获取用户名
 const fetchUserName = async () => {
   try {
-    const res = await $API.getName()
+    const res = await $API.getCurrentUserName()
     if (res.data?.data?.name) {
       userName.value = res.data.data.name
+      localStorage.setItem('nickname', res.data.data.name)
     }
   } catch (error) {
     console.error('获取用户名失败:', error)
@@ -535,8 +537,7 @@ const logout = async () => {
     console.error('登出请求失败:', error)
   } finally {
     // 清除本地存储的token和role
-    localStorage.removeItem('token')
-    localStorage.removeItem('role')
+    ;['token', 'id', 'username', 'nickname', 'avatar', 'role'].forEach((key) => localStorage.removeItem(key))
     ElMessage.success('已退出登录')
     router.push('/login')
   }
@@ -556,10 +557,17 @@ onMounted(() => {
     userName.value = event.detail.userName
   }
   window.addEventListener('userNameUpdated', handleUserNameUpdate)
+  const handleUserInfoUpdate = (event) => {
+    const data = event.detail || {}
+    userName.value = data.nickname || data.name || data.username || userName.value
+    userAvatar.value = data.avatar || userAvatar.value
+  }
+  window.addEventListener('userInfoUpdated', handleUserInfoUpdate)
 
   // 清理事件监听
   onBeforeUnmount(() => {
     window.removeEventListener('userNameUpdated', handleUserNameUpdate)
+    window.removeEventListener('userInfoUpdated', handleUserInfoUpdate)
   })
 })
 </script>

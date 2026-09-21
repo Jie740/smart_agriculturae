@@ -1,5 +1,7 @@
 package com.clj.ai.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.clj.ai.domain.AiRagDocument;
 import com.clj.ai.vo.DocumentUploadResultVo;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,4 +32,8 @@ public interface AiRagDocumentService {
      * @param documentId 文档ID
      */
     void reindexDocument(Long documentId);
+
+    Page<AiRagDocument> listDocuments(Long knowledgeBaseId, String keyword, Integer pageNum, Integer pageSize);
+
+    void updateDocumentName(Long documentId, String name);
 }

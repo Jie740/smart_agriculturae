@@ -20,6 +20,13 @@ spring:
       port: 6379
       database: 2
 
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://192.168.127.128:9000}
+  public-base-url: ${MINIO_PUBLIC_BASE_URL:http://img.ajie-ai.xyz}
+  accessKey: ${MINIO_ACCESS_KEY:admin}
+  secretKey: ${MINIO_SECRET_KEY:12345678}
+  bucketName: ${MINIO_BUCKET_NAME:agriculture}
+
 logging:
   level:
     com.clj.mapper: debug

@@ -22,6 +22,8 @@ public interface SysUserService extends IService<SysUser> {
 
     void updateUser(SysUser user);
 
+    void updateCurrentUser(SysUser user);
+
     Page<SysUser> searchUsersByPage(String keyword, Integer pageNum, Integer pageSize);
 
     void updateUserStatus(Long id, Integer status);

@@ -51,9 +51,23 @@ public class EquipmentApplyServiceImpl extends ServiceImpl<EquipmentApplyMapper,
 
     @Override
     public void delete(Integer applyId) {
+        EquipmentApply apply = getById(applyId);
+        if (apply == null) {
+            throw new BusinessException("申请不存在");
+        }
+        if (!isAdministrator() && !SecurityUtil.getUserId().equals(apply.getApplicantId())) {
+            throw new BusinessException("无权操作该申请");
+        }
         if (!removeById(applyId)) {
             throw new BusinessException("删除失败");
         }
+    }
+
+    private boolean isAdministrator() {
+        return SecurityUtil.getLoginUser().getAuthorities().stream()
+                .map(authority -> authority.getAuthority())
+                .anyMatch(authority -> "ROLE_SYSTEM_ADMIN".equals(authority)
+                        || "ROLE_ENTERPRISE_ADMIN".equals(authority));
     }
 
     @Override
@@ -363,7 +377,5 @@ public class EquipmentApplyServiceImpl extends ServiceImpl<EquipmentApplyMapper,
         return equipmentApplyVoPage;
     }
 }
-
-
 
 

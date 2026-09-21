@@ -16,4 +16,8 @@
     <sql id="Base_Column_List">
         id,message_id,document_id,chunk_id,score,created_time
     </sql>
+
+    <delete id="deleteByDocumentId">
+        DELETE FROM ai_rag_retrieval WHERE document_id = #{documentId}
+    </delete>
 </mapper>

@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/210</span>
+                <span class='fraction'>0/211</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/198</span>
+                <span class='fraction'>0/199</span>
             </div>
         
             
@@ -610,7 +610,8 @@
 <a name='L545'></a><a href='#L545'>545</a>
 <a name='L546'></a><a href='#L546'>546</a>
 <a name='L547'></a><a href='#L547'>547</a>
-<a name='L548'></a><a href='#L548'>548</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L548'></a><a href='#L548'>548</a>
+<a name='L549'></a><a href='#L549'>549</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -700,6 +701,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1247,18 +1249,18 @@
     &lt;!-- 分<span class="cstat-no" title="statement not covered" >页 --&gt;</span>
     &lt;div c<span class="cstat-no" title="statement not covered" >lass="pagination"&gt;</span>
       &lt;el-pagination
-        v-model:current-page="currentPage"
-<span class="cstat-no" title="statement not covered" >        v-model:page-size="pageSize"</span>
-        :page-sizes="[10, 20, 50, 100]"
-<span class="cstat-no" title="statement not covered" >        layout="total, sizes, p</span>rev, pager, next, jumper"
-        :total="total"
+<span class="cstat-no" title="statement not covered" >        v-model:current-page="c</span>urrentPage"
+        v-model:page-size="pageSize"
+<span class="cstat-no" title="statement not covered" >        :page-sizes="[10, 20, 50, 100]"</span>
+        layout="total, sizes, prev, pager, next, jumper"
+<span class="cstat-no" title="statement not covered" >        :total="total"</span>
         :page-count="Math.ceil(total / pageSize)"
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
-      /&gt;<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span>
-    &lt;/<span class="cstat-no" title="statement not covered" >div&gt;</span>
+      /&gt;
+    &lt;/div&gt;<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span>
 <span class="cstat-no" title="statement not covered" ></span>
-    &lt;!-- 添加/编辑用户对话框 --&gt;
+    &lt;!<span class="cstat-no" title="statement not covered" >-- 添加/编辑用户对话框 --&gt;</span>
     &lt;el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px"&gt;
       &lt;el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px"&gt;
         &lt;el-form-item label="用户ID" v-if="formData.userId"&gt;
@@ -1267,71 +1269,71 @@
         &lt;el-form-item label="用户名" prop="username"&gt;
           &lt;el-input v-model="formData.username" placeholder="请输入用户名" /&gt;
         &lt;/el-form-item&gt;
-<span class="cstat-no" title="statement not covered" >        &lt;el-form-item label="密码" p</span>rop="password"&gt;
-          &lt;el-input v-model="formData.password" type="text" placeholder="请输入密码" /&gt;
-<span class="cstat-no" title="statement not covered" >        &lt;/el-fo<span class="fstat-no" title="function not covered" >rm</span>-item&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;el-form-item label="姓名" prop="n</span>ame"&gt;
-          &lt;el-input v-model="formData.name" placeholder="请输入姓名" /&gt;
+        &lt;el-form-item label="密码" prop="password"&gt;
+<span class="cstat-no" title="statement not covered" >          &lt;el-input v-model="formD</span>ata.password" type="text" placeholder="请输入密码" /&gt;
+        &lt;/el-form-item&gt;
+<span class="cstat-no" title="statement not covered" >        &lt;el-for<span class="fstat-no" title="function not covered" >m-</span>item label="姓名" prop="name"&gt;</span>
+<span class="cstat-no" title="statement not covered" >          &lt;el-input v-model="formData.na</span>me" placeholder="请输入姓名" /&gt;
         &lt;/el-form-item&gt;
         &lt;el-form-item label="用户角色" prop="role"&gt;
           &lt;el-select v-model="formData.role" placeholder="请选择角色"&gt;
-            &lt;!-- &lt;el-option<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" > l</span>abel="系统管理员" value="system_admin" /&gt; --&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;el-option label="企业管理</span>员" value="enterprise_admin" /&gt;
-<span class="cstat-no" title="statement not covered" >            &lt;el-option label="承包人" value="user" /&gt;</span>
-          &lt;/el-select&gt;
+            &lt;!-- &lt;el-option label="系统管理员" value="system_admin" /&gt; --&gt;
+            &lt;el-option labe<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >l=</span>"企业管理员" value="enterprise_admin" /&gt;</span>
+<span class="cstat-no" title="statement not covered" >            &lt;el-option label="承包人"</span> value="user" /&gt;
+<span class="cstat-no" title="statement not covered" >          &lt;/el-select&gt;</span>
         &lt;/el-form-item&gt;
         &lt;el-form-item label="状态"&gt;
           &lt;el-select v-model="formData.status" placeholder="请选择状态"&gt;
-<span class="cstat-no" title="statement not covered" >            &lt;el-option label="正常" </span>value="1" /&gt;
-            &lt;el-option label="冻结" value="0" /&gt;
-<span class="cstat-no" title="statement not covered" >          &lt;/el-<span class="fstat-no" title="function not covered" >se</span>lect&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;/el-form-item&gt;</span>
-        &lt;el-form-item label="邮箱"&gt;
+            &lt;el-option label="正常" value="1" /&gt;
+<span class="cstat-no" title="statement not covered" >            &lt;el-option label="冻结" </span>value="0" /&gt;
+          &lt;/el-select&gt;
+<span class="cstat-no" title="statement not covered" >        &lt;/el-fo<span class="fstat-no" title="function not covered" >rm</span>-item&gt;</span>
+<span class="cstat-no" title="statement not covered" >        &lt;el-form-item label="邮箱"&gt;</span>
           &lt;el-input v-model="formData.email" placeholder="请输入邮箱" /&gt;
         &lt;/el-form-item&gt;
         &lt;el-form-item label="电话"&gt;
-          &lt;el-input v-mode<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >l=</span>"formData.phone" placeholder="请输入电话" /&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;/el-form-item&gt;</span>
+          &lt;el-input v-model="formData.phone" placeholder="请输入电话" /&gt;
+        &lt;/el-form-item&gt;<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span>
 <span class="cstat-no" title="statement not covered" >      &lt;/el-form&gt;</span>
-      &lt;template #footer&gt;
+<span class="cstat-no" title="statement not covered" >      &lt;template #footer&gt;</span>
         &lt;span class="dialog-footer"&gt;
           &lt;el-button @click="dialogVisible = false"&gt;取消&lt;/el-button&gt;
-          &lt;el-button <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >ty</span>pe="primary" @click="saveUser"&gt;保存&lt;/el-button&gt;</span>
-        &lt;/span&gt;
-<span class="cstat-no" title="statement not covered" >      &lt;/template&gt;<span class="cstat-no" title="statement not covered" ></span></span>
-    &lt;/<span class="cstat-no" title="statement not covered" >el-dialog&gt;<span class="fstat-no" title="function not covered" ></span></span>
-<span class="cstat-no" title="statement not covered" ></span>
-    &lt;!-- 删<span class="cstat-no" title="statement not covered" >除确认对话框 --&gt;</span>
-    &lt;el-dialog v-model="delet<span class="cstat-no" title="statement not covered" >eDialogVisible" title="确认删除" width="300px"&gt;</span>
-      &lt;p&gt;确定要删除用户 {{ deleteUserInfo.username }} 吗？&lt;/p&gt;
+          &lt;el-button type="primary" @click="saveUser"&gt;保存&lt;/el-button&gt;
+        &lt;/span&gt;<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span>
+      &lt;/template&gt;
+    &lt;/<span class="cstat-no" title="statement not covered" >el-dialog&gt;<span class="cstat-no" title="statement not covered" ></span></span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span>
+    &lt;!--<span class="cstat-no" title="statement not covered" > 删除确认对话框 --&gt;</span>
+    &lt;el-di<span class="cstat-no" title="statement not covered" >alog v-model="deleteDialogVisible" title="确认删除" width="300px"&gt;</span>
+      &lt;p&gt;确定要删除用户 {{ deleteUse<span class="cstat-no" title="statement not covered" >rInfo.username }} 吗？&lt;/p&gt;</span>
       &lt;template #footer&gt;
         &lt;span class="dialog-footer"&gt;
           &lt;el-button @click="deleteDialogVisible = false"&gt;取消&lt;/el-button&gt;
-          &lt;e<span class="cstat-no" title="statement not covered" >l-button type="danger" @click="deleteUser"&gt;删除&lt;/el-button&gt;</span>
-        &lt;/span&gt;
+          &lt;el-button type="danger" @click="deleteUser"&gt;删除&lt;/el-button&gt;
+        &lt;/sp<span class="cstat-no" title="statement not covered" >an&gt;</span>
       &lt;/template&gt;
-    &lt;/el-dialo<span class="cstat-no" title="statement not covered" >g&gt;</span>
+    &lt;/el-dialog&gt;
   &lt;/div&gt;<span class="cstat-no" title="statement not covered" ></span>
-&lt;/template&gt;
+&lt;/template&gt;<span class="cstat-no" title="statement not covered" ></span>
 &nbsp;
 &lt;script setup&gt;
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { Plus, Edit, Delete, Search, Lock, Unlock } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import $API fr<span class="cstat-no" title="statement not covered" >om '@/api'</span>
+import $API from '@/api'
 <span class="cstat-no" title="statement not covered" ></span>
-// 用户数据
+// 用户数据<span class="cstat-no" title="statement not covered" ></span>
 const userList = ref([])
 const total = ref(0)
 &nbsp;
 // 搜索和分页
 const searchQuery = ref('')
-const curren<span class="cstat-no" title="statement not covered" >tPage = ref(1)</span>
+const currentPage = ref(1)
 const pageSi<span class="cstat-no" title="statement not covered" >ze = ref(10)</span>
-&nbsp;
-// 对话框状态<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" ></span>
+// 对话框状态
 const dialog<span class="cstat-no" title="statement not covered" >Visible = ref(false)</span>
-const deleteDialogVisible = ref(false)
+const delete<span class="cstat-no" title="statement not covered" >DialogVisible = ref(false)</span>
 const dialogTitle = ref('添加用户')
 &nbsp;
 // 表单引用
@@ -1340,52 +1342,53 @@ const formRef = ref(null)
 // 表单验证规则
 const formRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >: </span>true, message: '请输入密码', trigger: 'blur' }],</span>
-  name<span class="cstat-no" title="statement not covered" >: [{ required: true, message: '请输入姓名', trigger: 'blur' }],</span>
-  role: [{ required: true, message: '请选择角色', trigger: 'change' }],
-}<span class="cstat-no" title="statement not covered" ></span>
-&nbsp;
-// 表单数据<span class="cstat-no" title="statement not covered" ></span>
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  name: [{ required: tr<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >ue</span>, message: '请输入姓名', trigger: 'blur' }],</span>
+  role<span class="cstat-no" title="statement not covered" >: [{ required: true, message: '请选择角色', trigger: 'change' }],</span>
+}
+<span class="cstat-no" title="statement not covered" ></span>
+// 表单数据
 const fo<span class="cstat-no" title="statement not covered" >rmData = ref({</span>
   userId<span class="cstat-no" title="statement not covered" >: '',</span>
-  username: '',
+  userna<span class="cstat-no" title="statement not covered" >me: '',</span>
   password: '',
   name: '',
   role: '',
-  status<span class="cstat-no" title="statement not covered" >: '1',</span>
+  status: '1',
   phone:<span class="cstat-no" title="statement not covered" > '',</span>
-  email: '',
+  email:<span class="cstat-no" title="statement not covered" > '',</span>
 })
 &nbsp;
 // 待删除用户
 const deleteUserInfo = ref({})
 &nbsp;
 // 加载状态
-const loading = ref(false<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >)</span></span>
-<span class="cstat-no" title="statement not covered" ></span>
+const loading = ref(false)
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span>
 // 过滤后<span class="cstat-no" title="statement not covered" >的用户列表</span>
-const <span class="cstat-no" title="statement not covered" >filteredUsers = com</span>puted(() =&gt; {
-  return userList.value
+const <span class="cstat-no" title="statement not covered" >filteredUsers = compute</span>d(() =&gt; {
+  retu<span class="cstat-no" title="statement not covered" >rn userList.value</span>
 })
 &nbsp;
-// 加载用户列表<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span>
-const <span class="cstat-no" title="statement not covered" >loadUsers = async () =&gt; </span>{
+// 加载用户列表
+const loadUsers = async <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
   load<span class="cstat-no" title="statement not covered" >ing.value = true</span>
   try <span class="cstat-no" title="statement not covered" >{</span>
-    let response
+    le<span class="cstat-no" title="statement not covered" >t response</span>
     if (searchQuery.value) {
       response = await $API.searchContractorsByPage(
-        searchQuery.value,<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span>
-<span class="cstat-no" title="statement not covered" >        currentPage.value,</span>
+        searchQuery.value,
+        currentPage.value,<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span>
 <span class="cstat-no" title="statement not covered" >        pageSize.value,</span>
 <span class="cstat-no" title="statement not covered" >      )</span>
-    } else {
-      response = await $API.getC<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >on</span>tractorsByPage(currentPage.value, pageSize.value)</span>
-    }<span class="cstat-no" title="statement not covered" ></span>
-    if<span class="cstat-no" title="statement not covered" > (response.da</span>ta &amp;&amp; response.data.code === '200') {
-      userList.value = response.data.data.records || []
+    } <span class="cstat-no" title="statement not covered" >else {</span>
+      response = await $API.getContractorsByPage(currentPage.value, pageSize.value)
+    }<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span>
+    if<span class="cstat-no" title="statement not covered" > (response.data &amp;&amp; response.d</span>ata.code === '200') {
+<span class="cstat-no" title="statement not covered" >      userList.valu</span>e = response.data.data.records || []
       total.value = response.data.data.total || 0
     }
+    console.log(response)
   } catch (error) {<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span>
     console.error('获取用<span class="cstat-no" title="statement not covered" >户列表失败:', error)</span>
   } finally {
@@ -1711,7 +1714,7 @@ onMounted(() =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-20T12:16:26.116Z
+                at 2026-09-21T09:37:48.791Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

@@ -44,13 +44,13 @@ public class MaterialController {
     }
 
     @GetMapping("/getAll")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
     public Result<List<Material>> getAll() {
         return Result.success(materialService.getAll());
     }
 
     @GetMapping("/getMaterialTypeById/{materialId}")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
     public Result<Map<String, String>> getMaterialById(@PathVariable("materialId") Long materialId) {
         return Result.success(materialService.getMaterialTypeById(materialId));
     }

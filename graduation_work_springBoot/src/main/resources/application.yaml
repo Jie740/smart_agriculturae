@@ -13,7 +13,7 @@ server:
 spring:
   # ==================== 默认激活的环境 ====================
   profiles:
-    active: prod
+    active: dev
 
   application:
     name: AgriculturalSystemApplication

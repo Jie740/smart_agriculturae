@@ -169,9 +169,23 @@ public class MaterialApplyServiceImpl extends ServiceImpl<MaterialApplyMapper, M
 
     @Override
     public void delete(Long applyId) {
+        MaterialApply apply = this.getById(applyId);
+        if (apply == null) {
+            throw new BusinessException("申请不存在");
+        }
+        if (!isAdministrator() && !SecurityUtil.getUserId().equals(apply.getApplicantId())) {
+            throw new BusinessException("无权操作该申请");
+        }
         if (!this.removeById(applyId)) {
             throw new BusinessException("删除失败");
         }
+    }
+
+    private boolean isAdministrator() {
+        return SecurityUtil.getLoginUser().getAuthorities().stream()
+                .map(authority -> authority.getAuthority())
+                .anyMatch(authority -> "ROLE_SYSTEM_ADMIN".equals(authority)
+                        || "ROLE_ENTERPRISE_ADMIN".equals(authority));
     }
 
     @Override
@@ -417,7 +431,5 @@ public class MaterialApplyServiceImpl extends ServiceImpl<MaterialApplyMapper, M
         return voPage;
     }
 }
-
-
 
 

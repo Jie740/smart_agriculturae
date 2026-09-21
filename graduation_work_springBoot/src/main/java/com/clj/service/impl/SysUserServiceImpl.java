@@ -148,6 +148,41 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     }
 
     @Override
+    public void updateCurrentUser(SysUser user) {
+        Long currentUserId = SecurityUtil.getUserId();
+        if (user == null || user.getId() == null || !currentUserId.equals(user.getId())) {
+            throw new BusinessException("只能修改当前用户资料");
+        }
+        SysUser existing = this.lambdaQuery()
+                .eq(SysUser::getId, currentUserId)
+                .eq(SysUser::getDeleted, 0)
+                .one();
+        if (existing == null) {
+            throw new BusinessException("用户不存在");
+        }
+        if (user.getUsername() != null && !user.getUsername().equals(existing.getUsername())) {
+            boolean duplicate = this.lambdaQuery()
+                    .eq(SysUser::getUsername, user.getUsername())
+                    .ne(SysUser::getId, currentUserId)
+                    .eq(SysUser::getDeleted, 0)
+                    .exists();
+            if (duplicate) {
+                throw new BusinessException("用户名已存在");
+            }
+        }
+        existing.setUsername(user.getUsername());
+        existing.setNickname(user.getNickname());
+        existing.setPhone(user.getPhone());
+        existing.setEmail(user.getEmail());
+        existing.setAvatar(user.getAvatar());
+        existing.setUpdateTime(new java.util.Date());
+        existing.setUpdateUid(currentUserId);
+        if (!this.updateById(existing)) {
+            throw new BusinessException("修改失败");
+        }
+    }
+
+    @Override
     public Page<SysUser> searchUsersByPage(String keyword, Integer pageNum, Integer pageSize) {
         if (keyword == null || keyword.isBlank()) {
             return getUsersByPage(pageNum, pageSize);

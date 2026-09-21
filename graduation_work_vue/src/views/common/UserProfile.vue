@@ -251,10 +251,21 @@ const getRoleTagType = (role) => {
 const fetchUserInfo = async () => {
   loading.value = true
   try {
-    const res = await $API.getUserInfo()
+    const res = await $API.getCurrentUserInfo()
     if (res.data?.data) {
-      userInfo.value = res.data.data
-      editForm.value = { ...res.data.data }
+      const data = res.data.data
+      userInfo.value = {
+        ...data,
+        userId: data.id,
+        name: data.nickname,
+        role: localStorage.getItem('role') || '',
+      }
+      avatarUrl.value = data.avatar || localStorage.getItem('avatar') || ''
+      editForm.value = { ...userInfo.value }
+      localStorage.setItem('id', String(data.id || ''))
+      localStorage.setItem('username', data.username || '')
+      localStorage.setItem('nickname', data.nickname || '')
+      if (data.avatar) localStorage.setItem('avatar', data.avatar)
     }
   } catch (error) {
     console.error('获取用户信息失败:', error)
@@ -283,7 +294,14 @@ const saveEdit = async () => {
       phone: editForm.value.phone,
       email: editForm.value.email,
     }
-    const res = await $API.updateUser(updateData)
+    const res = await $API.updateCurrentUser({
+      id: updateData.userId,
+      username: updateData.username,
+      nickname: updateData.name,
+      phone: updateData.phone,
+      email: updateData.email,
+      avatar: userInfo.value.avatar,
+    })
     if (res.data?.code === 500 || res.data?.code === '500') {
       throw new Error(res.data?.message || res.data?.msg || '修改失败')
     }
@@ -293,9 +311,10 @@ const saveEdit = async () => {
 
     // 重新获取用户姓名并更新
     try {
-      const nameRes = await $API.getName()
+      const nameRes = await $API.getCurrentUserName()
       if (nameRes.data?.data?.name) {
         const newName = nameRes.data.data.name
+        localStorage.setItem('nickname', newName)
         window.dispatchEvent(new CustomEvent('userNameUpdated', { detail: { userName: newName } }))
       }
     } catch (nameError) {
@@ -329,7 +348,7 @@ const savePassword = async () => {
     if (!valid) return
     loading.value = true
     try {
-      const res = await $API.updatePassword({
+      const res = await $API.updateCurrentUserPassword({
         oldPassword: passwordForm.value.oldPassword,
         newPassword: passwordForm.value.newPassword,
       })

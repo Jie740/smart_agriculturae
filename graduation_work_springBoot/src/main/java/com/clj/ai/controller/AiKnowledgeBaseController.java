@@ -74,8 +74,9 @@ public class AiKnowledgeBaseController {
      */
     @GetMapping("/getByPage/{pageNum}/{pageSize}")
     public Result<Page<AiKnowledgeBase>> getByPage(@PathVariable("pageNum") Integer pageNum,
-                                                   @PathVariable("pageSize") Integer pageSize) {
-        return Result.success(knowledgeBaseService.getKnowledgeBasesByPage(null, pageNum, pageSize));
+                                                   @PathVariable("pageSize") Integer pageSize,
+                                                   @RequestParam(required = false) Long typeId) {
+        return Result.success(knowledgeBaseService.getKnowledgeBasesByPage(null, typeId, pageNum, pageSize));
     }
 
     /**
@@ -89,7 +90,8 @@ public class AiKnowledgeBaseController {
     @GetMapping("/searchByPage/{keyword}/{pageNum}/{pageSize}")
     public Result<Page<AiKnowledgeBase>> searchByPage(@PathVariable("keyword") String keyword,
                                                       @PathVariable("pageNum") Integer pageNum,
-                                                      @PathVariable("pageSize") Integer pageSize) {
-        return Result.success(knowledgeBaseService.getKnowledgeBasesByPage(keyword, pageNum, pageSize));
+                                                      @PathVariable("pageSize") Integer pageSize,
+                                                      @RequestParam(required = false) Long typeId) {
+        return Result.success(knowledgeBaseService.getKnowledgeBasesByPage(keyword, typeId, pageNum, pageSize));
     }
 }

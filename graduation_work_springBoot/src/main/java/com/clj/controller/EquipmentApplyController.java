@@ -53,14 +53,14 @@ public class EquipmentApplyController {
         equipmentApplyService.updateApplyStatus(applyId, status);
         return Result.success();
     }
-    @GetMapping("/getMaterialApplyById/{applyId}")
+    @GetMapping("/getEquipmentApplyById/{applyId}")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
     public Result<EquipmentApplyVo> getById(@PathVariable("applyId") Long applyId){
         return Result.success(equipmentApplyService.getApplyVoById(applyId));
     }
 
     @GetMapping("/getEquipmentNameAndTypeNameById/{applyId}")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
     public Result<EquipmentDetailVo> getEquipmentNameAndTypeNameById(@PathVariable("applyId") Long applyId){
         return Result.success(equipmentApplyService.getEquipmentNameAndTypeNameById(applyId));
     }

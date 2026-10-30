@@ -6,7 +6,7 @@ import com.clj.common.exception.BusinessException;
 import com.clj.domain.Equipment;
 import com.clj.domain.EquipmentRecord;
 import com.clj.domain.EquipmentType;
-import com.clj.domain.User;
+import com.clj.domain.SysUser;
 import com.clj.domain.dto.EquipmentRecordDto;
 import com.clj.domain.vo.EquipmentRecordVo;
 import com.clj.domain.vo.EquipmentVo;
@@ -15,7 +15,7 @@ import com.clj.security.util.SecurityUtil;
 import com.clj.service.EquipmentRecordService;
 import com.clj.service.EquipmentService;
 import com.clj.service.EquipmentTypeService;
-import com.clj.service.UserService;
+import com.clj.service.SysUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -39,7 +39,7 @@ public class EquipmentRecordServiceImpl extends ServiceImpl<EquipmentRecordMappe
 
     private final EquipmentService equipmentService;
     private final EquipmentTypeService equipmentTypeService;
-    private final UserService userService;
+    private final SysUserService sysUserService;
 
     @Override
     public void add(EquipmentRecord equipmentRecord) {
@@ -84,16 +84,16 @@ public class EquipmentRecordServiceImpl extends ServiceImpl<EquipmentRecordMappe
         }
 
         // 批量查询用户信息
-        ArrayList<User> users = new ArrayList<>();
+        ArrayList<SysUser> users = new ArrayList<>();
         if (!ownerIds.isEmpty()) {
-            users = (ArrayList<User>) userService.listByIds(ownerIds);
+            users = (ArrayList<SysUser>) sysUserService.listByIds(ownerIds);
         }
 
         // 转换为 Map 便于快速查找
         Map<Long, Equipment> equipmentMap = equipments.stream()
                 .collect(Collectors.toMap(Equipment::getEquipmentId, e -> e));
-        Map<Long, User> userMap = users.stream()
-                .collect(Collectors.toMap(User::getUserId, u -> u));
+        Map<Long, SysUser> userMap = users.stream()
+                .collect(Collectors.toMap(SysUser::getId, u -> u));
 
         // 构建 VO 对象
         ArrayList<EquipmentRecordVo> voList = new ArrayList<>();
@@ -117,9 +117,9 @@ public class EquipmentRecordServiceImpl extends ServiceImpl<EquipmentRecordMappe
             }
 
             // 从 Map 中获取用户信息
-            User user = userMap.get(record.getOwnerId());
+            SysUser user = userMap.get(record.getOwnerId());
             if (user != null) {
-                vo.setOwnerName(user.getName());
+                vo.setOwnerName(user.getNickname());
                 vo.setOwnerPhone(user.getPhone());
             }
 
@@ -138,8 +138,9 @@ public class EquipmentRecordServiceImpl extends ServiceImpl<EquipmentRecordMappe
         }
 
         // 根据承包人姓名模糊查询用户
-        List<User> matchedUsers = userService.lambdaQuery()
-                .like(User::getName, keyword)
+        List<SysUser> matchedUsers = sysUserService.lambdaQuery()
+                .eq(SysUser::getDeleted, 0)
+                .like(SysUser::getNickname, keyword)
                 .list();
 
         // 如果没有匹配的用户，返回空结果
@@ -151,7 +152,7 @@ public class EquipmentRecordServiceImpl extends ServiceImpl<EquipmentRecordMappe
 
         // 获取匹配的用户 ID 列表
         ArrayList<Long> ownerIds = matchedUsers.stream()
-                .map(User::getUserId)
+                .map(SysUser::getId)
                 .collect(Collectors.toCollection(ArrayList::new));
 
         // 根据用户 ID 分页查询设备记录
@@ -176,8 +177,8 @@ public class EquipmentRecordServiceImpl extends ServiceImpl<EquipmentRecordMappe
         // 转换为 Map 便于快速查找
         Map<Long, Equipment> equipmentMap = equipments.stream()
                 .collect(Collectors.toMap(Equipment::getEquipmentId, e -> e));
-        Map<Long, User> userMap = matchedUsers.stream()
-                .collect(Collectors.toMap(User::getUserId, u -> u));
+        Map<Long, SysUser> userMap = matchedUsers.stream()
+                .collect(Collectors.toMap(SysUser::getId, u -> u));
 
         // 构建 VO 对象
         ArrayList<EquipmentRecordVo> voList = new ArrayList<>();
@@ -201,9 +202,9 @@ public class EquipmentRecordServiceImpl extends ServiceImpl<EquipmentRecordMappe
             }
 
             // 从 Map 中获取用户信息
-            User user = userMap.get(record.getOwnerId());
+            SysUser user = userMap.get(record.getOwnerId());
             if (user != null) {
-                vo.setOwnerName(user.getName());
+                vo.setOwnerName(user.getNickname());
                 vo.setOwnerPhone(user.getPhone());
             }
 
@@ -271,16 +272,16 @@ public class EquipmentRecordServiceImpl extends ServiceImpl<EquipmentRecordMappe
             }
 
             // 批量查询用户信息
-            ArrayList<User> users = new ArrayList<>();
+            ArrayList<SysUser> users = new ArrayList<>();
             if (!ownerIds.isEmpty()) {
-                users = (ArrayList<User>) userService.listByIds(ownerIds);
+                users = (ArrayList<SysUser>) sysUserService.listByIds(ownerIds);
             }
 
             // 转换为 Map 便于快速查找
             Map<Long, Equipment> equipmentMap = equipments.stream()
                     .collect(Collectors.toMap(Equipment::getEquipmentId, e -> e));
-            Map<Long, User> userMap = users.stream()
-                    .collect(Collectors.toMap(User::getUserId, u -> u));
+            Map<Long, SysUser> userMap = users.stream()
+                    .collect(Collectors.toMap(SysUser::getId, u -> u));
 
             // 构建 VO 对象
             ArrayList<EquipmentRecordVo> voList = new ArrayList<>();
@@ -304,9 +305,9 @@ public class EquipmentRecordServiceImpl extends ServiceImpl<EquipmentRecordMappe
                 }
 
                 // 从 Map 中获取用户信息
-                User user = userMap.get(record.getOwnerId());
+                SysUser user = userMap.get(record.getOwnerId());
                 if (user != null) {
-                    vo.setOwnerName(user.getName());
+                    vo.setOwnerName(user.getNickname());
                     vo.setOwnerPhone(user.getPhone());
                 }
 
@@ -361,16 +362,16 @@ public class EquipmentRecordServiceImpl extends ServiceImpl<EquipmentRecordMappe
         }
 
         // 6. 批量查询用户信息
-        ArrayList<User> users = new ArrayList<>();
+        ArrayList<SysUser> users = new ArrayList<>();
         if (!ownerIds.isEmpty()) {
-            users = (ArrayList<User>) userService.listByIds(ownerIds);
+            users = (ArrayList<SysUser>) sysUserService.listByIds(ownerIds);
         }
 
         // 7. 转换为 Map 便于快速查找
         Map<Long, Equipment> equipmentMap = equipments.stream()
                 .collect(Collectors.toMap(Equipment::getEquipmentId, e -> e));
-        Map<Long, User> userMap = users.stream()
-                .collect(Collectors.toMap(User::getUserId, u -> u));
+        Map<Long, SysUser> userMap = users.stream()
+                .collect(Collectors.toMap(SysUser::getId, u -> u));
 
         // 8. 构建 VO 对象
         ArrayList<EquipmentRecordVo> voList = new ArrayList<>();
@@ -394,9 +395,9 @@ public class EquipmentRecordServiceImpl extends ServiceImpl<EquipmentRecordMappe
             }
 
             // 从 Map 中获取用户信息
-            User user = userMap.get(record.getOwnerId());
+            SysUser user = userMap.get(record.getOwnerId());
             if (user != null) {
-                vo.setOwnerName(user.getName());
+                vo.setOwnerName(user.getNickname());
                 vo.setOwnerPhone(user.getPhone());
             }
 

@@ -12,7 +12,7 @@ import com.clj.domain.vo.LandAllocationVo;
 import com.clj.service.LandAllocationService;
 import com.clj.mapper.LandAllocationMapper;
 import com.clj.service.LandService;
-import com.clj.service.UserService;
+import com.clj.service.SysUserService;
 import com.clj.security.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -30,7 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LandAllocationServiceImpl extends ServiceImpl<LandAllocationMapper, LandAllocation>
     implements LandAllocationService{
-    final UserService userService;
+    final SysUserService sysUserService;
     final LandService landService;
 
     @Override
@@ -38,14 +38,13 @@ public class LandAllocationServiceImpl extends ServiceImpl<LandAllocationMapper,
     public void addLandAllocation(LandAllocationDto landAllocationDto) {
         LandAllocation landAllocation = new LandAllocation();
         BeanUtils.copyProperties(landAllocationDto, landAllocation);
-        User one = userService.lambdaQuery().eq(User::getName, landAllocationDto.getContractorName())
-                .eq(User::getPhone, landAllocationDto.getPhone())
-                .eq(User::getRole,"USER")
-                .one();
+        // 按 RBAC：仅查询拥有 USER 角色的承包人（sys_user + sys_user_role）
+        SysUser one = sysUserService.getContractorByNameAndPhone(
+                landAllocationDto.getContractorName(), landAllocationDto.getPhone());
         if (one == null){
             throw new BusinessException("该承包人不存在");
         }
-        landAllocation.setContractorId(one.getUserId());
+        landAllocation.setContractorId(one.getId());
 
         // 查询该地块在相同时间范围内是否已有分配记录
         // 时间冲突判断：已存在记录的起止时间与新增记录的起止时间有重叠
@@ -86,9 +85,10 @@ public class LandAllocationServiceImpl extends ServiceImpl<LandAllocationMapper,
     @Override
     public void updateLandAllocation(LandAllocationDto dto) {
         // 根据承包人姓名和电话查询用户
-        User user = userService.lambdaQuery()
-                .eq(User::getName, dto.getContractorName())
-                .eq(User::getPhone, dto.getPhone())
+        SysUser user = sysUserService.lambdaQuery()
+                .eq(SysUser::getNickname, dto.getContractorName())
+                .eq(SysUser::getPhone, dto.getPhone())
+                .eq(SysUser::getDeleted, 0)
                 .one();
 
         if (user == null) {
@@ -96,7 +96,7 @@ public class LandAllocationServiceImpl extends ServiceImpl<LandAllocationMapper,
         }
 
         // 获取用户 ID
-        Long contractorId = user.getUserId();
+        Long contractorId = user.getId();
 
         // 查询原有的地块分配记录
         LandAllocation allocation = this.getById(dto.getAllocationId());
@@ -126,8 +126,12 @@ public class LandAllocationServiceImpl extends ServiceImpl<LandAllocationMapper,
         LandAllocation allocationRecord = this.lambdaQuery().eq(LandAllocation::getLandId, landId)
                 .one();
         Long contractorId = allocationRecord.getContractorId();
-        User user = userService.getById(contractorId);
-        ContractorInfoVo contractorInfoVo = BeanUtil.copyProperties(user, ContractorInfoVo.class);
+        SysUser user = sysUserService.getById(contractorId);
+        ContractorInfoVo contractorInfoVo = new ContractorInfoVo();
+        if (user != null) {
+            contractorInfoVo.setName(user.getNickname());
+            contractorInfoVo.setPhone(user.getPhone());
+        }
         contractorInfoVo.setAllocationId(allocationRecord.getAllocationId());
         contractorInfoVo.setStartDate(allocationRecord.getStartDate());
         contractorInfoVo.setEndDate(allocationRecord.getEndDate());
@@ -160,16 +164,16 @@ public class LandAllocationServiceImpl extends ServiceImpl<LandAllocationMapper,
         }
 
         // 批量查询承包人信息
-        ArrayList<User> contractors = new ArrayList<>();
+        ArrayList<SysUser> contractors = new ArrayList<>();
         if (!contractorIds.isEmpty()) {
-            contractors = (ArrayList<User>) userService.listByIds(contractorIds);
+            contractors = (ArrayList<SysUser>) sysUserService.listByIds(contractorIds);
         }
 
         // 转换为 Map 便于快速查找
         java.util.Map<Long, Land> landMap = lands.stream()
                 .collect(java.util.stream.Collectors.toMap(Land::getLandId, land -> land));
-        java.util.Map<Long, User> contractorMap = contractors.stream()
-                .collect(java.util.stream.Collectors.toMap(User::getUserId, user -> user));
+        java.util.Map<Long, SysUser> contractorMap = contractors.stream()
+                .collect(java.util.stream.Collectors.toMap(SysUser::getId, user -> user));
 
         // 构建 VO 对象
         ArrayList<LandAllocationVo> landAllocationVos = new ArrayList<>();
@@ -187,9 +191,9 @@ public class LandAllocationServiceImpl extends ServiceImpl<LandAllocationMapper,
             }
 
             // 从 Map 中获取承包人信息
-            User contractor = contractorMap.get(allocation.getContractorId());
+            SysUser contractor = contractorMap.get(allocation.getContractorId());
             if (contractor != null) {
-                landAllocationVo.setContractorName(contractor.getName());
+                landAllocationVo.setContractorName(contractor.getNickname());
                 landAllocationVo.setPhone(contractor.getPhone());
             }
 
@@ -234,16 +238,16 @@ public class LandAllocationServiceImpl extends ServiceImpl<LandAllocationMapper,
         }
 
         // 批量查询承包人信息
-        ArrayList<User> contractors = new ArrayList<>();
+        ArrayList<SysUser> contractors = new ArrayList<>();
         if (!contractorIds.isEmpty()) {
-            contractors = (ArrayList<User>) userService.listByIds(contractorIds);
+            contractors = (ArrayList<SysUser>) sysUserService.listByIds(contractorIds);
         }
 
         // 转换为 Map 便于快速查找
         java.util.Map<Long, Land> landMap = lands.stream()
                 .collect(java.util.stream.Collectors.toMap(Land::getLandId, land -> land));
-        java.util.Map<Long, User> contractorMap = contractors.stream()
-                .collect(java.util.stream.Collectors.toMap(User::getUserId, user -> user));
+        java.util.Map<Long, SysUser> contractorMap = contractors.stream()
+                .collect(java.util.stream.Collectors.toMap(SysUser::getId, user -> user));
 
         // 构建 VO 对象并过滤
         ArrayList<LandAllocationVo> landAllocationVos = new ArrayList<>();
@@ -261,9 +265,9 @@ public class LandAllocationServiceImpl extends ServiceImpl<LandAllocationMapper,
             }
 
             // 从 Map 中获取承包人信息
-            User contractor = contractorMap.get(allocation.getContractorId());
+            SysUser contractor = contractorMap.get(allocation.getContractorId());
             if (contractor != null) {
-                landAllocationVo.setContractorName(contractor.getName());
+                landAllocationVo.setContractorName(contractor.getNickname());
                 landAllocationVo.setPhone(contractor.getPhone());
             }
 
@@ -273,7 +277,7 @@ public class LandAllocationServiceImpl extends ServiceImpl<LandAllocationMapper,
 
             // 根据地号名称或承包人名称进行过滤
             boolean matchLand = land != null && land.getLandName().contains(keyword);
-            boolean matchContractor = contractor != null && contractor.getName().contains(keyword);
+            boolean matchContractor = contractor != null && contractor.getNickname().contains(keyword);
 
             if (matchLand || matchContractor) {
                 landAllocationVos.add(landAllocationVo);

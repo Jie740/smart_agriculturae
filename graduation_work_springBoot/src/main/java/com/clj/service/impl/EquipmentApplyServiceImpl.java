@@ -29,20 +29,22 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EquipmentApplyServiceImpl extends ServiceImpl<EquipmentApplyMapper, EquipmentApply>
     implements EquipmentApplyService{
-    final UserService userService;
+    final SysUserService sysUserService;
     final EquipmentService equipmentService;
     final EquipmentRecordService equipmentRecordService;
     final EquipmentTypeService equipmentTypeService;
 
     @Override
     public void add(EquipmentApplyDto equipmentApplyDto) {
-        User user = userService.lambdaQuery().eq(User::getPhone, equipmentApplyDto.getPhone())
-                .eq(User::getName, equipmentApplyDto.getApplicant()).one();
+        SysUser user = sysUserService.lambdaQuery().eq(SysUser::getPhone, equipmentApplyDto.getPhone())
+                .eq(SysUser::getNickname, equipmentApplyDto.getApplicant())
+                .eq(SysUser::getDeleted, 0)
+                .one();
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
         EquipmentApply equipmentApply = new EquipmentApply();
-        equipmentApply.setApplicantId(user.getUserId());
+        equipmentApply.setApplicantId(user.getId());
         BeanUtils.copyProperties(equipmentApplyDto, equipmentApply);
         if (!save(equipmentApply)) {
             throw new BusinessException("添加失败");
@@ -72,13 +74,15 @@ public class EquipmentApplyServiceImpl extends ServiceImpl<EquipmentApplyMapper,
 
     @Override
     public void updateApply(EquipmentApplyDto equipmentApplyDto) {
-        User user = userService.lambdaQuery().eq(User::getPhone, equipmentApplyDto.getPhone())
-                .eq(User::getName, equipmentApplyDto.getApplicant()).one();
+        SysUser user = sysUserService.lambdaQuery().eq(SysUser::getPhone, equipmentApplyDto.getPhone())
+                .eq(SysUser::getNickname, equipmentApplyDto.getApplicant())
+                .eq(SysUser::getDeleted, 0)
+                .one();
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
         EquipmentApply equipmentApply = new EquipmentApply();
-        equipmentApply.setApplicantId(user.getUserId());
+        equipmentApply.setApplicantId(user.getId());
         BeanUtils.copyProperties(equipmentApplyDto, equipmentApply);
         if (!updateById(equipmentApply)) {
             throw new BusinessException("更新失败");
@@ -99,16 +103,17 @@ public class EquipmentApplyServiceImpl extends ServiceImpl<EquipmentApplyMapper,
                 .collect(Collectors.toSet());
 
         // 批量查询用户列表和设备列表
-        List<User> users = userService.lambdaQuery()
-                .in(User::getUserId, applicantIds)
+        List<SysUser> users = sysUserService.lambdaQuery()
+                .eq(SysUser::getDeleted, 0)
+                .in(SysUser::getId, applicantIds)
                 .list();
         List<Equipment> equipments = equipmentService.lambdaQuery()
                 .in(Equipment::getEquipmentId, equipmentIds)
                 .list();
 
         // 构建映射关系
-        java.util.Map<Long, User> userMap = users.stream()
-                .collect(Collectors.toMap(User::getUserId, user -> user));
+        java.util.Map<Long, SysUser> userMap = users.stream()
+                .collect(Collectors.toMap(SysUser::getId, user -> user));
         java.util.Map<Long, Equipment> equipmentMap = equipments.stream()
                 .collect(Collectors.toMap(Equipment::getEquipmentId, equipment -> equipment));
 
@@ -118,9 +123,9 @@ public class EquipmentApplyServiceImpl extends ServiceImpl<EquipmentApplyMapper,
             EquipmentApplyVo equipmentApplyVo = new EquipmentApplyVo();
             BeanUtils.copyProperties(apply, equipmentApplyVo);
 
-            User user = userMap.get(apply.getApplicantId());
+            SysUser user = userMap.get(apply.getApplicantId());
             if (user != null) {
-                equipmentApplyVo.setApplicant(user.getName());
+                equipmentApplyVo.setApplicant(user.getNickname());
                 equipmentApplyVo.setPhone(user.getPhone());
             }
 
@@ -144,11 +149,12 @@ public class EquipmentApplyServiceImpl extends ServiceImpl<EquipmentApplyMapper,
         }
 
         // 根据 keyword 查询用户 ID 列表（模糊匹配姓名或手机号）
-        List<User> users = userService.lambdaQuery()
-                .like(User::getName, keyword)
+        List<SysUser> users = sysUserService.lambdaQuery()
+                .eq(SysUser::getDeleted, 0)
+                .like(SysUser::getNickname, keyword)
                 .list();
         Set<Long> userIds = users.stream()
-                .map(User::getUserId)
+                .map(SysUser::getId)
                 .collect(Collectors.toSet());
 
         // 根据 keyword 查询设备 ID 列表（模糊匹配设备名称）
@@ -177,16 +183,17 @@ public class EquipmentApplyServiceImpl extends ServiceImpl<EquipmentApplyMapper,
                 .collect(Collectors.toSet());
 
         // 批量查询用户列表和设备列表
-        List<User> userList = userService.lambdaQuery()
-                .in(User::getUserId, applicantIds)
+        List<SysUser> userList = sysUserService.lambdaQuery()
+                .eq(SysUser::getDeleted, 0)
+                .in(SysUser::getId, applicantIds)
                 .list();
         List<Equipment> equipmentList = equipmentService.lambdaQuery()
                 .in(Equipment::getEquipmentId, applyEquipmentIds)
                 .list();
 
         // 构建映射关系
-        java.util.Map<Long, User> userMap = userList.stream()
-                .collect(Collectors.toMap(User::getUserId, user -> user));
+        java.util.Map<Long, SysUser> userMap = userList.stream()
+                .collect(Collectors.toMap(SysUser::getId, user -> user));
         java.util.Map<Long, Equipment> equipmentMap = equipmentList.stream()
                 .collect(Collectors.toMap(Equipment::getEquipmentId, equipment -> equipment));
 
@@ -196,9 +203,9 @@ public class EquipmentApplyServiceImpl extends ServiceImpl<EquipmentApplyMapper,
             EquipmentApplyVo equipmentApplyVo = new EquipmentApplyVo();
             BeanUtils.copyProperties(apply, equipmentApplyVo);
 
-            User user = userMap.get(apply.getApplicantId());
+            SysUser user = userMap.get(apply.getApplicantId());
             if (user != null) {
-                equipmentApplyVo.setApplicant(user.getName());
+                equipmentApplyVo.setApplicant(user.getNickname());
                 equipmentApplyVo.setPhone(user.getPhone());
             }
 
@@ -268,8 +275,11 @@ public class EquipmentApplyServiceImpl extends ServiceImpl<EquipmentApplyMapper,
                 .one();
         EquipmentApplyVo equipmentApplyVo = new EquipmentApplyVo();
         BeanUtils.copyProperties(apply, equipmentApplyVo);
-        User one = userService.lambdaQuery().eq(User::getUserId, apply.getApplicantId()).one();
-        equipmentApplyVo.setApplicant(one.getName());
+        SysUser one = sysUserService.lambdaQuery()
+                .eq(SysUser::getId, apply.getApplicantId())
+                .eq(SysUser::getDeleted, 0)
+                .one();
+        equipmentApplyVo.setApplicant(one.getNickname());
         equipmentApplyVo.setPhone(one.getPhone());
         Equipment equipment = equipmentService.lambdaQuery().eq(Equipment::getEquipmentId, apply.getEquipmentId()).one();
         equipmentApplyVo.setEquipmentName(equipment.getEquipmentName());
@@ -339,16 +349,17 @@ public class EquipmentApplyServiceImpl extends ServiceImpl<EquipmentApplyMapper,
                 .collect(Collectors.toSet());
 
         // 6. 批量查询用户列表和设备列表
-        List<User> userList = userService.lambdaQuery()
-                .in(User::getUserId, applicantIds)
+        List<SysUser> userList = sysUserService.lambdaQuery()
+                .eq(SysUser::getDeleted, 0)
+                .in(SysUser::getId, applicantIds)
                 .list();
         List<Equipment> equipmentList = equipmentService.lambdaQuery()
                 .in(Equipment::getEquipmentId, applyEquipmentIds)
                 .list();
 
         // 7. 构建映射关系
-        java.util.Map<Long, User> userMap = userList.stream()
-                .collect(Collectors.toMap(User::getUserId, user -> user));
+        java.util.Map<Long, SysUser> userMap = userList.stream()
+                .collect(Collectors.toMap(SysUser::getId, user -> user));
         java.util.Map<Long, Equipment> equipmentMap = equipmentList.stream()
                 .collect(Collectors.toMap(Equipment::getEquipmentId, equipment -> equipment));
 
@@ -358,9 +369,9 @@ public class EquipmentApplyServiceImpl extends ServiceImpl<EquipmentApplyMapper,
             EquipmentApplyVo equipmentApplyVo = new EquipmentApplyVo();
             BeanUtils.copyProperties(apply, equipmentApplyVo);
 
-            User user = userMap.get(apply.getApplicantId());
+            SysUser user = userMap.get(apply.getApplicantId());
             if (user != null) {
-                equipmentApplyVo.setApplicant(user.getName());
+                equipmentApplyVo.setApplicant(user.getNickname());
                 equipmentApplyVo.setPhone(user.getPhone());
             }
 

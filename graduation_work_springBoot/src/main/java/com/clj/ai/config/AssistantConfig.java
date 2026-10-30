@@ -25,7 +25,7 @@ public class AssistantConfig {
     public ChatModel openAiChatModel() {
         return OpenAiChatModel.builder()
                 .apiKey(System.getenv("AL_API_KEY"))
-                .modelName("qwen3-vl-flash")
+                .modelName("qwen3.8-flash")
                 .baseUrl("https://dashscope.aliyuncs.com/compatible-mode/v1")
                 .temperature(0.3)  //温度：介于0~2
                 .maxTokens(1024)  //最大生成 tokens 数：介于1~4096
@@ -39,7 +39,7 @@ public class AssistantConfig {
     public StreamingChatModel openAiStreamingChatModel(){
         return OpenAiStreamingChatModel.builder()
                 .apiKey(System.getenv("AL_API_KEY"))
-                .modelName("qwen3-vl-flash")
+                .modelName("qwen3.8-flash")
                 .baseUrl("https://dashscope.aliyuncs.com/compatible-mode/v1")
                 .temperature(0.3)  //温度：介于0~2
                 .maxTokens(1024)  //最大生成 tokens 数：介于1~4096

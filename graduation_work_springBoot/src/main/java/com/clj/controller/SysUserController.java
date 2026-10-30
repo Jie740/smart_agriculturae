@@ -3,6 +3,7 @@ package com.clj.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.clj.common.result.Result;
 import com.clj.domain.SysUser;
+import com.clj.domain.dto.SysUserManageDto;
 import com.clj.domain.dto.SystemUserDto;
 import com.clj.service.SysUserService;
 import jakarta.validation.Valid;
@@ -43,6 +44,22 @@ public class SysUserController {
     @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
     public Result<Void> updateUser(@RequestBody SysUser user) {
         sysUserService.updateUser(user);
+        return Result.success();
+    }
+
+    // ==================== 管理端新增/编辑（含 RBAC 角色） ====================
+
+    @PostMapping("/manage/add")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> addManageUser(@RequestBody SysUserManageDto dto) {
+        sysUserService.addManageUser(dto);
+        return Result.success();
+    }
+
+    @PostMapping("/manage/update")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    public Result<Void> updateManageUser(@RequestBody SysUserManageDto dto) {
+        sysUserService.updateManageUser(dto);
         return Result.success();
     }
 

@@ -1,12 +1,14 @@
 package com.clj.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.clj.common.exception.BusinessException;
 import com.clj.domain.SysRole;
 import com.clj.domain.SysUser;
 import com.clj.domain.SysUserRole;
+import com.clj.domain.dto.SysUserManageDto;
 import com.clj.domain.dto.SystemUserDto;
 import com.clj.mapper.SysRoleMapper;
 import com.clj.mapper.SysUserMapper;
@@ -20,7 +22,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author ajie
@@ -52,10 +57,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
     @Override
     public Page<SysUser> getUsersByPage(Integer pageNum, Integer pageSize) {
-        return this.lambdaQuery()
+        Page<SysUser> page = this.lambdaQuery()
                 .eq(SysUser::getDeleted, 0)
                 .orderByDesc(SysUser::getCreateTime)
                 .page(new Page<>(pageNum, pageSize));
+        fillRoleCodes(page.getRecords());
+        return page;
     }
 
     @Override
@@ -96,34 +103,145 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         BeanUtil.copyProperties(dto, user);
         // 密码 BCrypt 加密存储
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setDeleted(0);
+        user.setStatus(1);
 
         if (!this.save(user)) {
             throw new BusinessException("添加用户失败");
         }
 
         // 3. 根据 roleCode 查询角色，写入用户-角色关联表
+        insertUserRole(user.getId(), dto.getRoleCode());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void addManageUser(SysUserManageDto dto) {
+        if (dto.getUsername() == null || dto.getUsername().isBlank()) {
+            throw new BusinessException("用户名不能为空");
+        }
+        if (dto.getPassword() == null || dto.getPassword().isBlank()) {
+            throw new BusinessException("密码不能为空");
+        }
+        // 检查用户名是否存在
+        Long count = this.lambdaQuery()
+                .eq(SysUser::getUsername, dto.getUsername())
+                .eq(SysUser::getDeleted, 0)
+                .count();
+        if (count > 0) {
+            throw new BusinessException("用户名已存在");
+        }
+        if (dto.getPhone() != null && !dto.getPhone().isBlank()) {
+            Long phoneCount = this.lambdaQuery()
+                    .eq(SysUser::getPhone, dto.getPhone())
+                    .eq(SysUser::getDeleted, 0)
+                    .count();
+            if (phoneCount > 0) {
+                throw new BusinessException("手机号已注册");
+            }
+        }
+
+        SysUser user = new SysUser();
+        user.setUsername(dto.getUsername());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setNickname(dto.getNickname());
+        user.setPhone(dto.getPhone());
+        user.setEmail(dto.getEmail());
+        user.setStatus(dto.getStatus() == null ? 1 : dto.getStatus());
+        user.setDeleted(0);
+        user.setCreateTime(new java.util.Date());
+        if (!this.save(user)) {
+            throw new BusinessException("添加用户失败");
+        }
+
+        // 按 RBAC 写入用户-角色关联
+        insertUserRole(user.getId(), dto.getRoleCode());
+    }
+
+    /**
+     * 根据角色编码查询角色并写入 sys_user_role（RBAC）
+     */
+    private void insertUserRole(Long userId, String roleCode) {
+        if (roleCode == null || roleCode.isBlank()) {
+            throw new BusinessException("请选择用户角色");
+        }
         SysRole role = sysRoleMapper.selectOne(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SysRole>()
-                        .eq(SysRole::getRoleCode, dto.getRoleCode())
+                new LambdaQueryWrapper<SysRole>()
+                        .eq(SysRole::getRoleCode, roleCode)
                         .eq(SysRole::getDeleted, 0));
         if (role == null) {
-            throw new BusinessException("角色不存在: " + dto.getRoleCode());
+            throw new BusinessException("角色不存在: " + roleCode);
         }
 
         SysUserRole userRole = new SysUserRole();
-        userRole.setUserId(user.getId());
+        userRole.setUserId(userId);
         userRole.setRoleId(role.getId());
         sysUserRoleMapper.insert(userRole);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteUser(Long id) {
-        // 软删除
+        // 删除用户-角色关联（RBAC）
+        sysUserRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>()
+                .eq(SysUserRole::getUserId, id));
+        // 软删除用户
         if (!this.lambdaUpdate()
                 .eq(SysUser::getId, id)
                 .set(SysUser::getDeleted, 1)
                 .update()) {
             throw new BusinessException("删除失败");
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateManageUser(SysUserManageDto dto) {
+        if (dto.getId() == null) {
+            throw new BusinessException("用户ID不能为空");
+        }
+        SysUser user = this.lambdaQuery()
+                .eq(SysUser::getId, dto.getId())
+                .eq(SysUser::getDeleted, 0)
+                .one();
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        // 检查用户名是否被其他用户使用
+        if (dto.getUsername() != null && !dto.getUsername().isBlank()) {
+            SysUser existingUser = this.lambdaQuery()
+                    .eq(SysUser::getUsername, dto.getUsername())
+                    .ne(SysUser::getId, dto.getId())
+                    .eq(SysUser::getDeleted, 0)
+                    .one();
+            if (existingUser != null) {
+                throw new BusinessException("用户名已存在");
+            }
+        }
+
+        user.setUsername(dto.getUsername());
+        user.setNickname(dto.getNickname());
+        user.setPhone(dto.getPhone());
+        user.setEmail(dto.getEmail());
+        if (dto.getStatus() != null) {
+            user.setStatus(dto.getStatus());
+        }
+        // 密码留空表示不修改
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+        user.setUpdateTime(new java.util.Date());
+        user.setUpdateUid(SecurityUtil.getUserId());
+        if (!this.updateById(user)) {
+            throw new BusinessException("修改失败");
+        }
+
+        // 重新分配角色（先删后插，RBAC）
+        if (dto.getRoleCode() != null && !dto.getRoleCode().isBlank()) {
+            sysUserRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>()
+                    .eq(SysUserRole::getUserId, dto.getId()));
+            insertUserRole(dto.getId(), dto.getRoleCode());
         }
     }
 
@@ -187,13 +305,15 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         if (keyword == null || keyword.isBlank()) {
             return getUsersByPage(pageNum, pageSize);
         }
-        return this.lambdaQuery()
+        Page<SysUser> page = this.lambdaQuery()
                 .eq(SysUser::getDeleted, 0)
                 .and(w -> w.like(SysUser::getNickname, keyword)
                         .or().like(SysUser::getUsername, keyword)
                         .or().likeRight(SysUser::getPhone, keyword))
                 .orderByDesc(SysUser::getCreateTime)
                 .page(new Page<>(pageNum, pageSize));
+        fillRoleCodes(page.getRecords());
+        return page;
     }
 
     @Override
@@ -208,12 +328,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
     @Override
     public Map<String, String> searchUserByNameAndPhone(String name, String phone) {
-        SysUser user = this.lambdaQuery()
-                .eq(SysUser::getNickname, name)
-                .eq(SysUser::getPhone, phone)
-                .eq(SysUser::getDeleted, 0)
-                .apply("id IN (" + USER_ROLE_SUB_SQL + ")")
-                .one();
+        SysUser user = getContractorByNameAndPhone(name, phone);
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
@@ -223,12 +338,25 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     }
 
     @Override
-    public Page<SysUser> getContractorsByPage(Integer pageNum, Integer pageSize) {
+    public SysUser getContractorByNameAndPhone(String name, String phone) {
+        // 按 RBAC：仅查询拥有 USER 角色的承包人
         return this.lambdaQuery()
+                .eq(SysUser::getNickname, name)
+                .eq(SysUser::getPhone, phone)
+                .eq(SysUser::getDeleted, 0)
+                .apply("id IN (" + USER_ROLE_SUB_SQL + ")")
+                .one();
+    }
+
+    @Override
+    public Page<SysUser> getContractorsByPage(Integer pageNum, Integer pageSize) {
+        Page<SysUser> page = this.lambdaQuery()
                 .eq(SysUser::getDeleted, 0)
                 .apply("id IN (" + CONTRACTOR_ROLE_SUB_SQL + ")")
                 .orderByDesc(SysUser::getCreateTime)
                 .page(new Page<>(pageNum, pageSize));
+        fillRoleCodes(page.getRecords());
+        return page;
     }
 
     @Override
@@ -236,13 +364,59 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         if (keyword == null || keyword.isBlank()) {
             return getContractorsByPage(pageNum, pageSize);
         }
-        return this.lambdaQuery()
+        Page<SysUser> page = this.lambdaQuery()
                 .eq(SysUser::getDeleted, 0)
                 .apply("id IN (" + CONTRACTOR_ROLE_SUB_SQL + ")")
                 .and(w -> w.like(SysUser::getNickname, keyword)
                         .or().likeRight(SysUser::getPhone, keyword))
                 .orderByDesc(SysUser::getCreateTime)
                 .page(new Page<>(pageNum, pageSize));
+        fillRoleCodes(page.getRecords());
+        return page;
+    }
+
+    /**
+     * 批量回填用户的 RBAC 角色编码（取第一个角色），供列表展示
+     */
+    private void fillRoleCodes(List<SysUser> users) {
+        if (users == null || users.isEmpty()) {
+            return;
+        }
+        List<Long> userIds = users.stream()
+                .map(SysUser::getId)
+                .collect(Collectors.toList());
+
+        // 1. 查询用户-角色关联
+        List<SysUserRole> userRoles = sysUserRoleMapper.selectList(
+                new LambdaQueryWrapper<SysUserRole>()
+                        .in(SysUserRole::getUserId, userIds));
+        if (userRoles.isEmpty()) {
+            return;
+        }
+
+        // 2. 查询角色信息
+        List<Long> roleIds = userRoles.stream()
+                .map(SysUserRole::getRoleId)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, SysRole> roleMap = sysRoleMapper.selectList(
+                        new LambdaQueryWrapper<SysRole>()
+                                .in(SysRole::getId, roleIds)
+                                .eq(SysRole::getDeleted, 0))
+                .stream()
+                .collect(Collectors.toMap(SysRole::getId, Function.identity(), (k1, k2) -> k1));
+
+        // 3. userId -> roleCode
+        Map<Long, String> userRoleCodeMap = userRoles.stream()
+                .filter(ur -> roleMap.containsKey(ur.getRoleId()))
+                .collect(Collectors.toMap(SysUserRole::getUserId,
+                        ur -> roleMap.get(ur.getRoleId()).getRoleCode(), (k1, k2) -> k1));
+
+        users.forEach(user -> {
+            user.setRoleCode(userRoleCodeMap.get(user.getId()));
+            // 脱敏：不返回密码哈希
+            user.setPassword(null);
+        });
     }
 
     @Override
@@ -256,6 +430,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         }
         // 脱敏：不返回密码
         user.setPassword(null);
+        fillRoleCodes(List.of(user));
         return user;
     }
 

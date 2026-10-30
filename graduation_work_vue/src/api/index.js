@@ -1,14 +1,14 @@
 import request from '../utils/request'
 
-// 用户相关
+// 用户相关（sys_user 表 + RBAC）
 const USER_URLS = {
-  ADD_USER: '/user/addUser',
-  DELETE_USER: '/user/deleteUser',
-  UPDATE_USER: '/user/updateUser',
-  GET_USERS_BY_PAGE: '/user/getUsersByPage',
-  SEARCH_USERS_BY_PAGE: '/user/searchUsersByPage',
-  SEARCH_USERS_BY_NAME_AND_PHONE: '/user/searchUserByNameAndPhone',
-  GET_NAME: '/user/getName',
+  ADD_USER: '/sys-user/manage/add',
+  DELETE_USER: '/sys-user/delete',
+  UPDATE_USER: '/sys-user/manage/update',
+  GET_USERS_BY_PAGE: '/sys-user/page',
+  SEARCH_USERS_BY_PAGE: '/sys-user/search',
+  SEARCH_USERS_BY_NAME_AND_PHONE: '/sys-user/contractor',
+  GET_NAME: '/sys-user/name',
 }
 
 // 地块相关
@@ -62,25 +62,16 @@ const api = {
     return request({ url: USER_URLS.UPDATE_USER, method: 'post', data })
   },
   updatePassword(data) {
-    return request({ url: '/user/updatePassword', method: 'put', data })
+    return request({ url: '/sys-user/password', method: 'put', data })
   },
   getUserInfo() {
-    return request({ url: '/user/getUserInfo', method: 'get' })
+    return request({ url: '/sys-user/info', method: 'get' })
   },
   getName() {
     return request({ url: USER_URLS.GET_NAME, method: 'get' })
   },
-  getCurrentUserInfo() {
-    return request({ url: '/sys-user/info', method: 'get' })
-  },
-  getCurrentUserName() {
-    return request({ url: '/sys-user/name', method: 'get' })
-  },
   updateCurrentUser(data) {
     return request({ url: '/sys-user/profile', method: 'put', data })
-  },
-  updateCurrentUserPassword(data) {
-    return request({ url: '/sys-user/password', method: 'put', data })
   },
   getUsersByPage(pageNum, pageSize) {
     return request({ url: `${USER_URLS.GET_USERS_BY_PAGE}/${pageNum}/${pageSize}`, method: 'get' })
@@ -93,20 +84,20 @@ const api = {
   },
   updateUserStatus(userId, status) {
     return request({
-      url: `/user/updateUserStatus/${userId}/${status}`,
+      url: `/sys-user/status/${userId}/${status}`,
       method: 'put',
     })
   },
   // 承包人相关
   getContractorsByPage(pageNum, pageSize) {
     return request({
-      url: `/user/getContractorsByPage/${pageNum}/${pageSize}`,
+      url: `/sys-user/contractors/${pageNum}/${pageSize}`,
       method: 'get',
     })
   },
   searchContractorsByPage(keyword, pageNum, pageSize) {
     return request({
-      url: `/user/searchContractorsByPage/${keyword}/${pageNum}/${pageSize}`,
+      url: `/sys-user/contractors/search/${keyword}/${pageNum}/${pageSize}`,
       method: 'get',
     })
   },

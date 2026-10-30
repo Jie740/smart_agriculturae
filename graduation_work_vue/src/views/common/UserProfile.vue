@@ -251,7 +251,7 @@ const getRoleTagType = (role) => {
 const fetchUserInfo = async () => {
   loading.value = true
   try {
-    const res = await $API.getCurrentUserInfo()
+    const res = await $API.getUserInfo()
     if (res.data?.data) {
       const data = res.data.data
       userInfo.value = {
@@ -311,7 +311,7 @@ const saveEdit = async () => {
 
     // 重新获取用户姓名并更新
     try {
-      const nameRes = await $API.getCurrentUserName()
+      const nameRes = await $API.getName()
       if (nameRes.data?.data?.name) {
         const newName = nameRes.data.data.name
         localStorage.setItem('nickname', newName)
@@ -348,7 +348,7 @@ const savePassword = async () => {
     if (!valid) return
     loading.value = true
     try {
-      const res = await $API.updateCurrentUserPassword({
+      const res = await $API.updatePassword({
         oldPassword: passwordForm.value.oldPassword,
         newPassword: passwordForm.value.newPassword,
       })

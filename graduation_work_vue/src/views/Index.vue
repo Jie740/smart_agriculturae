@@ -451,7 +451,7 @@ const userAvatar = ref(localStorage.getItem('avatar') || '')
 // 获取用户名
 const fetchUserName = async () => {
   try {
-    const res = await $API.getCurrentUserName()
+    const res = await $API.getName()
     if (res.data?.data?.name) {
       userName.value = res.data.data.name
       localStorage.setItem('nickname', res.data.data.name)

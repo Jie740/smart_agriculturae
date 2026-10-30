@@ -680,8 +680,8 @@ onMounted(async () => {
   if (userRole.value === 'user') {
     try {
       const userInfoRes = await $API.getUserInfo()
-      if (userInfoRes.data?.data?.userId) {
-        userId.value = userInfoRes.data.data.userId
+      if (userInfoRes.data?.data?.id) {
+        userId.value = userInfoRes.data.data.id
       }
     } catch (e) {
       console.error('获取用户信息失败:', e)

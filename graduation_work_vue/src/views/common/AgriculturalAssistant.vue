@@ -997,11 +997,113 @@ onBeforeUnmount(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.message-text {
+  overflow-wrap: anywhere;
+}
 .message-text :deep(p) {
   margin: 0 0 10px;
 }
 .message-text :deep(p:last-child) {
   margin-bottom: 0;
+}
+/* 全局 reset 把 font-weight 压成 normal，标题/加粗需要显式恢复 */
+.message-text :deep(h1),
+.message-text :deep(h2),
+.message-text :deep(h3),
+.message-text :deep(h4),
+.message-text :deep(h5),
+.message-text :deep(h6) {
+  margin: 16px 0 8px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: inherit;
+}
+.message-text :deep(h1:first-child),
+.message-text :deep(h2:first-child),
+.message-text :deep(h3:first-child),
+.message-text :deep(h4:first-child),
+.message-text :deep(h5:first-child),
+.message-text :deep(h6:first-child) {
+  margin-top: 0;
+}
+.message-text :deep(h1) {
+  font-size: 20px;
+}
+.message-text :deep(h2) {
+  font-size: 18px;
+}
+.message-text :deep(h3) {
+  font-size: 16px;
+}
+.message-text :deep(h4),
+.message-text :deep(h5),
+.message-text :deep(h6) {
+  font-size: 15px;
+}
+.message-text :deep(strong),
+.message-text :deep(b) {
+  font-weight: 600;
+}
+.message-text :deep(em),
+.message-text :deep(i) {
+  font-style: italic;
+}
+.message-text :deep(a) {
+  color: #2563eb;
+  text-decoration: underline;
+}
+.message-text :deep(ul),
+.message-text :deep(ol) {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+.message-text :deep(ul) {
+  list-style: disc;
+}
+.message-text :deep(ol) {
+  list-style: decimal;
+}
+.message-text :deep(li) {
+  margin: 4px 0;
+}
+.message-text :deep(li > ul),
+.message-text :deep(li > ol) {
+  margin: 2px 0;
+}
+.message-text :deep(li::marker) {
+  color: #9ca3af;
+}
+.message-text :deep(hr) {
+  border: none;
+  border-top: 1px solid rgba(148, 163, 184, 0.5);
+  margin: 14px 0;
+}
+.message-text :deep(blockquote) {
+  margin: 8px 0;
+  padding: 4px 12px;
+  border-left: 3px solid rgba(148, 163, 184, 0.6);
+  color: rgba(107, 114, 128, 0.9);
+  background: rgba(15, 23, 42, 0.03);
+}
+.message-text :deep(table) {
+  width: 100%;
+  margin: 10px 0;
+  border-collapse: collapse;
+  font-size: 14px;
+  display: block;
+  overflow-x: auto;
+}
+.message-text :deep(th),
+.message-text :deep(td) {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  padding: 6px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+.message-text :deep(th) {
+  font-weight: 600;
+  background: rgba(15, 23, 42, 0.05);
+  white-space: nowrap;
 }
 .message-text :deep(pre) {
   margin: 10px 0;
@@ -1014,6 +1116,8 @@ onBeforeUnmount(() => {
   padding: 2px 6px;
   border-radius: 4px;
   background: rgba(15, 23, 42, 0.08);
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+  font-size: 13px;
 }
 .message-text :deep(pre code) {
   padding: 0;

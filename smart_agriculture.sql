@@ -11,7 +11,7 @@
  Target Server Version : 80023 (8.0.23)
  File Encoding         : 65001
 
- Date: 02/09/2026 15:07:33
+ Date: 30/10/2026 18:22:00
 */
 
 SET NAMES utf8mb4;
@@ -31,18 +31,12 @@ CREATE TABLE `contractor_material_stock`  (
   PRIMARY KEY (`contractor_material_id`) USING BTREE,
   INDEX `material_id`(`material_id` ASC) USING BTREE,
   INDEX `user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 22 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '承包人农资库存表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 23 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '承包人农资库存表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of contractor_material_stock
 -- ----------------------------
-INSERT INTO `contractor_material_stock` VALUES (13, 5, 2214, 10, 6, '2026-04-11 02:47:53');
-INSERT INTO `contractor_material_stock` VALUES (14, 6, 2217, 10, 0, '2026-04-11 14:23:25');
-INSERT INTO `contractor_material_stock` VALUES (15, 7, 2214, 11, 1, '2026-04-11 18:54:23');
-INSERT INTO `contractor_material_stock` VALUES (18, 5, 2220, 8, 0, '2026-05-08 22:12:50');
-INSERT INTO `contractor_material_stock` VALUES (19, 7, 2220, 1, 0, '2026-05-08 22:29:20');
-INSERT INTO `contractor_material_stock` VALUES (20, 5, 2221, 0, 0, '2026-05-09 13:31:23');
-INSERT INTO `contractor_material_stock` VALUES (21, 5, 2222, 0, 0, '2026-05-09 17:52:52');
+INSERT INTO `contractor_material_stock` VALUES (22, 6, 5, 1, 0, '2026-10-30 18:07:08');
 
 -- ----------------------------
 -- Table structure for crop
@@ -58,13 +52,14 @@ CREATE TABLE `crop`  (
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '描述',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (`crop_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '农作物信息表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '农作物信息表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of crop
 -- ----------------------------
 INSERT INTO `crop` VALUES (5, '小麦', '柔麦', 100, '30', '10', '小麦农作物', '2026-03-17 03:01:47');
 INSERT INTO `crop` VALUES (6, '水稻', '籼稻', 100, '30', '10', '水稻农作物', '2026-03-17 15:42:13');
+INSERT INTO `crop` VALUES (7, 'test', 'test', 11, '11', '11', 'test', '2026-10-30 18:05:40');
 
 -- ----------------------------
 -- Table structure for crop_growth_record
@@ -102,8 +97,8 @@ CREATE TABLE `equipment`  (
 -- ----------------------------
 -- Records of equipment
 -- ----------------------------
-INSERT INTO `equipment` VALUES (1, '设备1', 5, 2);
-INSERT INTO `equipment` VALUES (11, '设备2', 3, 1);
+INSERT INTO `equipment` VALUES (1, '设备1', 5, 0);
+INSERT INTO `equipment` VALUES (11, '设备2', 3, 0);
 INSERT INTO `equipment` VALUES (13, '设备4', 5, 0);
 INSERT INTO `equipment` VALUES (21, '设备6', 5, 0);
 
@@ -152,8 +147,6 @@ CREATE TABLE `equipment_record`  (
 -- ----------------------------
 -- Records of equipment_record
 -- ----------------------------
-INSERT INTO `equipment_record` VALUES (7, 11, 2217, 0, NULL);
-INSERT INTO `equipment_record` VALUES (9, 1, 2214, 1, NULL);
 
 -- ----------------------------
 -- Table structure for equipment_repair_apply
@@ -219,7 +212,7 @@ CREATE TABLE `farm_operation_record`  (
   INDEX `record_id`(`record_id` ASC) USING BTREE,
   INDEX `operator_id`(`user_id` ASC) USING BTREE,
   INDEX `material_id`(`material_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 86 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '农事活动记录表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 87 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '农事活动记录表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of farm_operation_record
@@ -255,6 +248,7 @@ INSERT INTO `farm_operation_record` VALUES (82, 38, '播种', '1', 5, 10, 2221, 
 INSERT INTO `farm_operation_record` VALUES (83, 38, '收割', '1', NULL, 0, 2221, '2026-05-19 16:00:00', 100.00);
 INSERT INTO `farm_operation_record` VALUES (84, 39, '播种', '11', 5, 1, 2222, '2026-05-11 16:00:00', 0.00);
 INSERT INTO `farm_operation_record` VALUES (85, 39, '收割', '11', NULL, 0, 2222, '2026-05-13 16:00:00', 100.00);
+INSERT INTO `farm_operation_record` VALUES (86, 40, '浇水', '1', NULL, 0, 2214, '2026-09-08 16:00:00', 0.00);
 
 -- ----------------------------
 -- Table structure for land
@@ -268,7 +262,7 @@ CREATE TABLE `land`  (
   `soil_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '土壤类型',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (`land_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 21 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '地块信息表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 23 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '地块信息表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of land
@@ -281,6 +275,8 @@ INSERT INTO `land` VALUES (16, '地块5', '5', 55.00, '1', '2026-05-08 22:07:57'
 INSERT INTO `land` VALUES (17, '地块9', '9', 9.00, '9', '2026-05-08 22:11:14');
 INSERT INTO `land` VALUES (19, '地块10', '10', 10.00, '15', '2026-05-09 13:29:38');
 INSERT INTO `land` VALUES (20, '地块11', '11', 11.00, '11', '2026-05-09 17:51:24');
+INSERT INTO `land` VALUES (21, '2121', '21', 2121.00, '112', '2026-09-21 15:12:40');
+INSERT INTO `land` VALUES (22, 'test', 't', 11.00, '11', '2026-10-30 17:36:36');
 
 -- ----------------------------
 -- Table structure for land_allocation
@@ -296,19 +292,12 @@ CREATE TABLE `land_allocation`  (
   PRIMARY KEY (`allocation_id`) USING BTREE,
   INDEX `land_id`(`land_id` ASC) USING BTREE,
   INDEX `contractor_id`(`contractor_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 44 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '地块分配表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 48 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '地块分配表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of land_allocation
 -- ----------------------------
-INSERT INTO `land_allocation` VALUES (36, 2, 2214, '2026-04-07', '2027-04-14', '2026-04-11 18:49:37');
-INSERT INTO `land_allocation` VALUES (37, 5, 2214, '2026-04-09', '2027-04-07', '2026-04-11 18:49:51');
-INSERT INTO `land_allocation` VALUES (38, 13, 2217, '2026-04-21', '2027-04-24', '2026-04-11 18:50:07');
-INSERT INTO `land_allocation` VALUES (39, 14, 2217, '2026-04-07', '2027-04-28', '2026-04-11 18:50:17');
-INSERT INTO `land_allocation` VALUES (40, 16, 2214, '2026-05-13', '2026-05-15', '2026-05-08 22:08:07');
-INSERT INTO `land_allocation` VALUES (41, 17, 2220, '2026-04-29', '2026-05-21', '2026-05-08 22:11:25');
-INSERT INTO `land_allocation` VALUES (42, 19, 2221, '2026-05-13', '2026-05-14', '2026-05-09 13:29:50');
-INSERT INTO `land_allocation` VALUES (43, 20, 2222, '2026-05-12', '2026-05-23', '2026-05-09 17:51:36');
+INSERT INTO `land_allocation` VALUES (47, 22, 5, '2026-10-22', '2026-10-29', '2026-10-30 18:05:18');
 
 -- ----------------------------
 -- Table structure for material
@@ -329,7 +318,7 @@ CREATE TABLE `material`  (
 -- Records of material
 -- ----------------------------
 INSERT INTO `material` VALUES (5, '小麦种子', 5, 45, 10, '2026-03-16 15:14:42');
-INSERT INTO `material` VALUES (6, '水稻种子', 5, 40, 40, '2026-03-16 15:18:45');
+INSERT INTO `material` VALUES (6, '水稻种子', 5, 39, 40, '2026-03-16 15:18:45');
 INSERT INTO `material` VALUES (7, '无机肥', 7, 30, 25, '2026-03-18 14:33:06');
 
 -- ----------------------------
@@ -346,7 +335,7 @@ CREATE TABLE `material_apply`  (
   PRIMARY KEY (`apply_id`) USING BTREE,
   INDEX `applicant_id`(`applicant_id` ASC) USING BTREE,
   INDEX `material_id`(`material_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 31 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '农资申请表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 33 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '农资申请表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of material_apply
@@ -366,6 +355,8 @@ INSERT INTO `material_apply` VALUES (27, 2220, 7, 1, '2026-05-08 14:29:14', 1);
 INSERT INTO `material_apply` VALUES (28, 2214, 7, 1, '2026-05-08 14:36:57', 1);
 INSERT INTO `material_apply` VALUES (29, 2221, 5, 1, '2026-05-09 05:31:15', 1);
 INSERT INTO `material_apply` VALUES (30, 2222, 5, 1, '2026-05-09 09:52:46', 1);
+INSERT INTO `material_apply` VALUES (31, 5, 6, 1, '2026-10-30 10:06:59', 1);
+INSERT INTO `material_apply` VALUES (32, 5, 5, 100, '2026-10-30 10:07:38', 2);
 
 -- ----------------------------
 -- Table structure for material_stock_record
@@ -379,7 +370,7 @@ CREATE TABLE `material_stock_record`  (
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (`stock_record_id`) USING BTREE,
   INDEX `material_id`(`material_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 31 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '农资出入库记录表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 32 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '农资出入库记录表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of material_stock_record
@@ -396,6 +387,7 @@ INSERT INTO `material_stock_record` VALUES (27, 7, 1, 1, '2026-05-08 22:29:20');
 INSERT INTO `material_stock_record` VALUES (28, 7, 1, 1, '2026-05-08 22:37:04');
 INSERT INTO `material_stock_record` VALUES (29, 5, 1, 1, '2026-05-09 13:31:23');
 INSERT INTO `material_stock_record` VALUES (30, 5, 1, 1, '2026-05-09 17:52:52');
+INSERT INTO `material_stock_record` VALUES (31, 6, 1, 1, '2026-10-30 18:07:08');
 
 -- ----------------------------
 -- Table structure for material_type
@@ -405,7 +397,7 @@ CREATE TABLE `material_type`  (
   `type_id` bigint NOT NULL AUTO_INCREMENT COMMENT '类型ID',
   `type_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '类型名（化肥、农药、种子、农膜）',
   PRIMARY KEY (`type_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '农资类型表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '农资类型表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of material_type
@@ -413,6 +405,7 @@ CREATE TABLE `material_type`  (
 INSERT INTO `material_type` VALUES (5, '种子');
 INSERT INTO `material_type` VALUES (7, '化肥');
 INSERT INTO `material_type` VALUES (8, '农药');
+INSERT INTO `material_type` VALUES (9, 's');
 
 -- ----------------------------
 -- Table structure for mature_crop
@@ -458,7 +451,7 @@ CREATE TABLE `planting_plan`  (
   PRIMARY KEY (`plan_id`) USING BTREE,
   INDEX `land_id`(`land_id` ASC) USING BTREE,
   INDEX `creator_id`(`creator_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 40 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '种植计划表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 42 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '种植计划表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of planting_plan
@@ -468,10 +461,11 @@ INSERT INTO `planting_plan` VALUES (30, '计划2', 5, 6, 2216, 100.00, '2026-04-
 INSERT INTO `planting_plan` VALUES (32, '计划4', 14, 6, 2216, 100.00, '2026-04-13', '2027-04-13', '2026-04-11 18:51:23', 1);
 INSERT INTO `planting_plan` VALUES (33, '计划5', 13, 5, 2216, 100.00, '2026-04-06', '2027-04-07', '2026-04-18 17:33:45', 3);
 INSERT INTO `planting_plan` VALUES (35, '计划6', 13, 5, 2216, 100.00, '2026-04-11', '2026-04-25', '2026-04-18 18:03:54', 3);
-INSERT INTO `planting_plan` VALUES (36, '计划8', 16, 5, 2216, 100.00, '2026-04-21', '2026-05-28', '2026-05-08 22:08:45', 1);
+INSERT INTO `planting_plan` VALUES (36, '计划8', 16, 5, 2216, 100.00, '2026-04-21', '2026-05-28', '2026-05-08 22:08:45', 2);
 INSERT INTO `planting_plan` VALUES (37, '计划9', 17, 6, 2216, 100.00, '2026-05-05', '2026-05-26', '2026-05-08 22:11:41', 3);
 INSERT INTO `planting_plan` VALUES (38, '计划10', 19, 5, 2216, 10.00, '2026-05-04', '2026-05-26', '2026-05-09 13:30:10', 3);
-INSERT INTO `planting_plan` VALUES (39, '计划11', 20, 5, 2216, 100.00, '2026-05-26', '2026-05-28', '2026-05-09 17:51:53', 3);
+INSERT INTO `planting_plan` VALUES (40, '21', 21, 5, 1, 21.00, '2026-09-14', '2026-09-29', '2026-09-21 15:17:49', 1);
+INSERT INTO `planting_plan` VALUES (41, 'test', 22, 7, 1, 11.00, '2026-10-25', '2026-10-20', '2026-10-30 18:05:53', 1);
 
 -- ----------------------------
 -- Table structure for planting_plan_adjust
@@ -492,12 +486,14 @@ CREATE TABLE `planting_plan_adjust`  (
   PRIMARY KEY (`adjust_id`) USING BTREE,
   INDEX `applicant_id`(`applicant_id` ASC) USING BTREE,
   INDEX `plan_id`(`plan_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 44 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '种植计划调整申请表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 47 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '种植计划调整申请表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of planting_plan_adjust
 -- ----------------------------
-INSERT INTO `planting_plan_adjust` VALUES (24, 2214, 30, 5, 6, 100.00, '2026-04-04', '2026-05-10', '1', '2026-04-11 11:01:55', 1);
+INSERT INTO `planting_plan_adjust` VALUES (44, 5, 41, 22, 7, 11.00, '2026-10-26', '2026-10-21', 'test', '2026-10-30 10:06:22', 1);
+INSERT INTO `planting_plan_adjust` VALUES (45, 5, 36, 16, 5, 100.00, '2026-04-20', '2026-05-27', 'test', '2026-10-30 10:06:35', 0);
+INSERT INTO `planting_plan_adjust` VALUES (46, 5, 40, 21, 5, 21.00, '2026-09-13', '2026-09-28', 'test', '2026-10-30 10:06:42', 2);
 
 -- ----------------------------
 -- Table structure for planting_record
@@ -517,7 +513,7 @@ CREATE TABLE `planting_record`  (
   INDEX `land_id`(`land_id` ASC) USING BTREE,
   INDEX `crop_id`(`crop_id` ASC) USING BTREE,
   INDEX `plan_id`(`plan_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 40 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '地块种植记录表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 42 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '地块种植记录表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of planting_record
@@ -531,6 +527,8 @@ INSERT INTO `planting_record` VALUES (36, 16, 5, 36, '2026-05-13', '2026-05-21',
 INSERT INTO `planting_record` VALUES (37, 17, 6, 37, '2026-05-13', '2026-05-21', '2026-05-12', 1, '2026-05-08 22:12:00');
 INSERT INTO `planting_record` VALUES (38, 19, 5, 38, '2026-05-14', '2026-05-21', '2026-05-19', 1, '2026-05-09 13:30:33');
 INSERT INTO `planting_record` VALUES (39, 20, 5, 39, '2026-05-20', '2026-05-21', '2026-05-13', 1, '2026-05-09 17:52:15');
+INSERT INTO `planting_record` VALUES (40, 21, 5, 40, '2026-09-07', '2026-09-30', NULL, 0, '2026-09-21 15:22:53');
+INSERT INTO `planting_record` VALUES (41, 22, 7, 41, '2026-10-21', '2026-10-31', NULL, 0, '2026-10-30 18:08:09');
 
 -- ----------------------------
 -- Table structure for processing_record
@@ -677,14 +675,15 @@ CREATE TABLE `sys_user`  (
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `username`(`username` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '系统用户表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '系统用户表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_user
 -- ----------------------------
-INSERT INTO `sys_user` VALUES (1, NULL, '$2a$10$vLgAp3Y3l/onmEXATEU/MOow33gXuOThWzG4bYRUqT2HMhxGAbAt6', NULL, '740@qq.com', NULL, NULL, 1, NULL, '2026-08-10 16:10:52', NULL, '2026-08-10 16:10:52', NULL, 0, NULL);
-INSERT INTO `sys_user` VALUES (3, NULL, '$2a$10$W5MVULHH6SdBR7AuFs6yAeKb2zRn/jioju7hAUjwEzIlSlCeT3bcu', NULL, NULL, '15323669470', NULL, 1, NULL, '2026-08-10 17:09:22', NULL, '2026-08-10 17:09:22', NULL, 0, NULL);
-INSERT INTO `sys_user` VALUES (4, NULL, '$2a$10$zA.uyqXcUFvFgITHChBcZegZ7rIeazybYlngF5ZxXuluQlXKz4ZcW', NULL, NULL, '153236694', NULL, 1, NULL, '2026-08-10 17:47:34', NULL, '2026-08-10 17:47:34', NULL, 0, NULL);
+INSERT INTO `sys_user` VALUES (1, '740@qq.com', '$2a$10$vLgAp3Y3l/onmEXATEU/MOow33gXuOThWzG4bYRUqT2HMhxGAbAt6', '1223', '740@qq.com', '12', NULL, 1, NULL, '2026-08-10 16:10:52', NULL, '2026-10-30 18:03:10', 1, 0, NULL);
+INSERT INTO `sys_user` VALUES (3, '15323669470', '$2a$10$W5MVULHH6SdBR7AuFs6yAeKb2zRn/jioju7hAUjwEzIlSlCeT3bcu', '123', NULL, '15323669470', NULL, 1, NULL, '2026-08-10 17:09:22', NULL, '2026-10-30 18:02:30', NULL, 0, NULL);
+INSERT INTO `sys_user` VALUES (4, '153236694', '$2a$10$zA.uyqXcUFvFgITHChBcZegZ7rIeazybYlngF5ZxXuluQlXKz4ZcW', '1221', NULL, '153236694', NULL, 1, NULL, '2026-08-10 17:47:34', NULL, '2026-10-30 18:02:51', NULL, 0, NULL);
+INSERT INTO `sys_user` VALUES (5, 'b', '$2a$10$TO7reAXXxakFRsmP7RVYpeI/jh98CEQmo/rEJ4vOwKAHa84gn3ouG', 'b', 'b', 'b', NULL, 1, NULL, '2026-10-30 10:04:29', NULL, '2026-10-30 18:04:31', NULL, 0, NULL);
 
 -- ----------------------------
 -- Table structure for sys_user_role
@@ -702,14 +701,15 @@ CREATE TABLE `sys_user_role`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_user_role`(`user_id` ASC, `role_id` ASC) USING BTREE,
   INDEX `idx_role_id`(`role_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户角色关联表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户角色关联表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_user_role
 -- ----------------------------
-INSERT INTO `sys_user_role` VALUES (1, 1, 3, '2026-08-10 16:10:52', NULL, '2026-08-10 16:10:52', NULL, NULL);
-INSERT INTO `sys_user_role` VALUES (3, 3, 4, '2026-08-10 17:09:22', NULL, '2026-08-10 17:09:22', NULL, NULL);
-INSERT INTO `sys_user_role` VALUES (4, 4, 4, '2026-08-10 17:47:34', NULL, '2026-08-10 17:47:34', NULL, NULL);
+INSERT INTO `sys_user_role` VALUES (1, 1, 4, '2026-08-10 16:10:52', NULL, '2026-09-21 15:11:18', NULL, NULL);
+INSERT INTO `sys_user_role` VALUES (3, 3, 4, '2026-08-10 17:09:22', NULL, '2026-10-30 17:09:54', NULL, NULL);
+INSERT INTO `sys_user_role` VALUES (4, 4, 3, '2026-08-10 17:47:34', NULL, '2026-10-30 17:09:55', NULL, NULL);
+INSERT INTO `sys_user_role` VALUES (5, 5, 3, '2026-10-30 18:04:31', NULL, '2026-10-30 18:04:31', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for user
@@ -726,7 +726,7 @@ CREATE TABLE `user`  (
   `status` smallint NOT NULL DEFAULT 1 COMMENT '冻结（0）、正常（1）',
   PRIMARY KEY (`user_id`) USING BTREE,
   UNIQUE INDEX `username`(`username` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2223 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 2225 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user
@@ -737,8 +737,6 @@ INSERT INTO `user` VALUES (2216, '3', '3', '3', 'system_admin', '3', '3', 1);
 INSERT INTO `user` VALUES (2217, '4', '4', '4', 'user', '4', '4', 1);
 INSERT INTO `user` VALUES (2218, '5', '5', '5', 'enterprise_admin', '5', '5', 1);
 INSERT INTO `user` VALUES (2219, '6', '6', '6', 'system_admin', '6', '6', 1);
-INSERT INTO `user` VALUES (2220, '9', '9', '9', 'user', '9', '9', 1);
-INSERT INTO `user` VALUES (2221, '10', '1', '10', 'user', '10', '10', 1);
-INSERT INTO `user` VALUES (2222, '11', '11', '11', 'user', '11', '11', 1);
+INSERT INTO `user` VALUES (2224, 'a', '$2a$10$zB9KRx319PUAgLheZYnkSu7HlOYw6Ocids3tqQ/.bFnrAlkaO/HCO', 'a', 'user', 'a', 'a', 1);
 
 SET FOREIGN_KEY_CHECKS = 1;

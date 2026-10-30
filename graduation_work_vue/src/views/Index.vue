@@ -402,6 +402,22 @@
         </div>
       </header>
 
+      <!-- 多标签窗口栏 -->
+      <div class="tabs-bar">
+        <div
+          v-for="tab in openTabs"
+          :key="tab.path"
+          class="tab-item"
+          :class="{ active: tab.path === route.path }"
+          @click="router.push(tab.path)"
+        >
+          <span class="tab-title">{{ tab.title }}</span>
+          <el-icon class="tab-close" @click.stop="closeTab(tab)">
+            <Close />
+          </el-icon>
+        </div>
+      </div>
+
       <!-- 内容区域 -->
       <div class="content-wrapper">
         <router-view />
@@ -411,7 +427,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
   Setting,
@@ -435,6 +451,7 @@ import {
   Monitor,
   Finished,
   Notification,
+  Close,
 } from '@element-plus/icons-vue'
 import $API from '@/api'
 import { ElMessage } from 'element-plus'
@@ -467,59 +484,52 @@ const activeMenu = computed(() => {
   return path
 })
 
-const pageTitle = computed(() => {
-  const path = route.path
-  const titleMap = {
-    // 系统管理员
-    '/index/userManage': '用户管理',
-    '/index/landInfo': '地块信息',
-    '/index/cropInfo': '农作物信息',
-    '/index/agriculturalAssistant': '农业助手',
-    // '/system-admin/plot/monitoring': '农作物监控',
-    // '/system-admin/plot/activity': '农事活动记录',
-    // '/system-admin/plan/info': '计划信息',
-    // '/system-admin/plan/create': '计划制定',
-    // '/system-admin/plan/approval': '计划调整审批',
-    // '/system-admin/materials/info': '农资信息',
-    // '/system-admin/materials/approval': '农资审批',
-    // '/system-admin/equipment/info': '设备信息',
-    // '/system-admin/equipment/approval': '设备审批',
-    // '/system-admin/mature-crop/info': '成熟作物信息',
-    // '/system-admin/mature-crop/processing': '加工记录',
-    // '/system-admin/mature-crop/product': '产品信息',
-    // '/system-admin/assistant': '农业助手',
-    // 企业管理员
-    // '/enterprise-admin/plot/info': '地块信息',
-    // '/enterprise-admin/plot/monitoring': '农作物监控',
-    // '/enterprise-admin/plot/activity': '农事活动记录',
-    // '/enterprise-admin/plan/info': '计划信息',
-    // '/enterprise-admin/plan/create': '计划制定',
-    // '/enterprise-admin/plan/approval': '计划调整审批',
-    // '/enterprise-admin/contractor/info': '承包人信息',
-    // '/enterprise-admin/crop/info': '农作物信息',
-    // '/enterprise-admin/materials/info': '农资信息',
-    // '/enterprise-admin/materials/approval': '农资审批',
-    // '/enterprise-admin/equipment/info': '设备信息',
-    // '/enterprise-admin/equipment/approval': '设备审批',
-    // '/enterprise-admin/mature-crop/info': '成熟作物信息',
-    // '/enterprise-admin/mature-crop/processing': '加工记录',
-    // '/enterprise-admin/mature-crop/product': '产品信息',
-    // '/enterprise-admin/assistant': '农业助手',
-    // 承包人
-    // '/contractor/plot/info': '地块信息',
-    // '/contractor/plot/monitoring': '农作物监控',
-    // '/contractor/plot/activity': '农事活动记录',
-    // '/contractor/plan/info': '计划信息',
-    // '/contractor/plan/adjustment': '调整申请',
-    // '/contractor/materials/info': '农资信息',
-    // '/contractor/materials/application': '农资申请',
-    // '/contractor/materials/equipment-info': '设备信息',
-    // '/contractor/materials/equipment-application': '设备申请',
-    // '/contractor/materials/equipment-repair': '设备报修',
-    // '/contractor/assistant': '农业助手',
-  }
-  return titleMap[path] || '农业管理系统'
-})
+const titleMap = {
+  '/index/userManage': '用户管理',
+  '/index/landInfo': '地块信息',
+  '/index/landAllocationInfo': '地块分配情况',
+  '/index/cropInfo': '农作物信息',
+  '/index/plantingPlanInfo': '计划信息',
+  '/index/materialInfo': '公司农资库存',
+  '/index/contractorMaterialInfo': '承包人农资库存',
+  '/index/equipmentInfo': '公司设备信息',
+  '/index/contractorEquipmentInfo': '承包人设备信息',
+  '/index/planAdjustInfo': '计划调整审批',
+  '/index/materialApproval': '农资审批',
+  '/index/equipmentApproval': '设备审批',
+  '/index/plantingRecord': '种植记录',
+  '/index/landMonitor': '农作物监控',
+  '/index/landActivity': '农事活动记录',
+  '/index/matureCropInfo': '成熟作物信息',
+  '/index/agriculturalAssistant': '农业助手',
+  '/index/contractorManage': '承包人管理',
+  '/index/profile': '个人中心',
+}
+
+const pageTitle = computed(() => titleMap[route.path] || '农业管理系统')
+
+// 多标签窗口：点击菜单自动打开对应窗口，点击标签切换，点击 x 关闭
+const openTabs = ref([])
+
+const closeTab = (tab) => {
+  const index = openTabs.value.findIndex((item) => item.path === tab.path)
+  if (index === -1) return
+  openTabs.value.splice(index, 1)
+  if (route.path !== tab.path) return
+  const next = openTabs.value[index - 1] || openTabs.value[index]
+  router.push(next ? next.path : '/index/landInfo')
+}
+
+watch(
+  () => route.path,
+  (path) => {
+    if (path === '/index' || path === '/login') return
+    if (!openTabs.value.some((item) => item.path === path)) {
+      openTabs.value.push({ path, title: titleMap[path] || '农业管理系统' })
+    }
+  },
+  { immediate: true }
+)
 
 // 方法
 const toggleSidebar = () => {
@@ -738,13 +748,15 @@ onMounted(() => {
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
+  background: url('/bg_picture.jpg') center/cover no-repeat fixed;
 }
 
 /* 顶部导航栏 */
 .top-nav {
   height: 50px;
-  background-color: #fff;
-  border-bottom: 1px solid #e8e8e8;
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(232, 232, 232, 0.6);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -783,13 +795,66 @@ onMounted(() => {
   margin: 0 8px;
 }
 
+/* 多标签窗口栏 */
+.tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(232, 232, 232, 0.6);
+  flex-shrink: 0;
+}
+
+.tab-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px 0 14px;
+  border-radius: 15px;
+  font-size: 13px;
+  color: #606266;
+  background: #f0f2f5;
+  border: 1px solid transparent;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s;
+}
+
+.tab-item:hover {
+  color: #409eff;
+  background: #ecf5ff;
+}
+
+.tab-item.active {
+  color: #fff;
+  background: linear-gradient(90deg, #409eff 0%, #66b1ff 100%);
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.4);
+}
+
+.tab-close {
+  font-size: 12px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.tab-close:hover {
+  background: rgba(0, 0, 0, 0.2);
+  transform: scale(1.15);
+}
+
 /* 内容区域 */
 .content-wrapper {
   flex: 1;
   padding: 16px;
   overflow-y: auto;
   overflow-x: hidden;
-  background-color: #f0f2f5;
+  background: transparent;
   min-height: 0;
 }
 
@@ -807,3 +872,4 @@ onMounted(() => {
   }
 }
 </style>
+ 

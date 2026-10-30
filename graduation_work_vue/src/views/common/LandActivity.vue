@@ -30,6 +30,7 @@
     <div class="table-container">
       <el-table
         :data="recordList"
+        class="tbl-cyan"
         border
         stripe
         v-loading="loading"
@@ -135,7 +136,7 @@
         v-loading="activityLoading"
         style="width: 100%"
         max-height="450"
-        class="activity-table"
+        class="activity-table tbl-amber"
         highlight-current-row
       >
         <el-table-column prop="operationId" label="操作ID" width="90" align="center" fixed="left">
@@ -1001,7 +1002,11 @@ onMounted(async () => {
 <style scoped>
 .planting-management {
   padding: 20px;
-  background-color: #f5f7fa;
+  background: transparent;
+  min-height: 100vh;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  margin: 0;
 }
 
 .header {
@@ -1162,23 +1167,24 @@ onMounted(async () => {
 }
 
 :deep(.activity-dialog .el-dialog__header) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  background: #fff;
+  padding: 16px 20px;
   margin-right: 0;
+  border-bottom: 1px solid #eef0f3;
 }
 
 :deep(.activity-dialog .el-dialog__title) {
-  color: white;
+  color: #303133;
   font-weight: 600;
-  font-size: 18px;
+  font-size: 15px;
 }
 
 :deep(.activity-dialog .el-dialog__headerbtn .el-dialog__close) {
-  color: white;
+  color: #909399;
 }
 
 :deep(.activity-dialog .el-dialog__headerbtn:hover .el-dialog__close) {
-  color: #f0f0f0;
+  color: #303133;
 }
 
 .activity-pagination {
@@ -1246,7 +1252,7 @@ onMounted(async () => {
   height: calc(100vh - 280px);
   overflow: auto;
   border-radius: 8px;
-  background-color: #fff;
+  background: rgba(255, 255, 255, 0.82);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 

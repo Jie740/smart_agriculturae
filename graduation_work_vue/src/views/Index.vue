@@ -383,19 +383,24 @@
           <span class="page-title">{{ pageTitle }}</span>
         </div>
         <div class="nav-right">
-          <el-dropdown>
-            <span class="user-info">
-              <el-avatar
-                :size="32"
-                :src="userAvatar"
-              >{{ userName?.charAt(0) }}</el-avatar>
-              <span>{{ userName }}</span>
-              <el-icon><ArrowDown /></el-icon>
-            </span>
+          <el-dropdown trigger="click" popper-class="user-dropdown-popper">
+            <div class="user-info">
+              <span class="avatar-ring">
+                <el-avatar
+                  :size="34"
+                  :src="userAvatar"
+                >{{ userName?.charAt(0) }}</el-avatar>
+              </span>
+              <div class="user-meta">
+                <span class="user-name">{{ userName }}</span>
+                <span class="user-role">{{ roleLabel }}</span>
+              </div>
+              <el-icon class="arrow-icon"><ArrowDown /></el-icon>
+            </div>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="goToProfile">个人中心</el-dropdown-item>
-                <el-dropdown-item divided @click="logout">退出登录</el-dropdown-item>
+                <el-dropdown-item :icon="User" @click="goToProfile">个人中心</el-dropdown-item>
+                <el-dropdown-item :icon="SwitchButton" divided @click="logout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -452,6 +457,7 @@ import {
   Finished,
   Notification,
   Close,
+  SwitchButton,
 } from '@element-plus/icons-vue'
 import $API from '@/api'
 import { ElMessage } from 'element-plus'
@@ -464,6 +470,16 @@ const sidebarCollapsed = ref(false)
 const userRole = ref(localStorage.getItem('role') || '')
 const userName = ref(localStorage.getItem('nickname') || localStorage.getItem('username') || '')
 const userAvatar = ref(localStorage.getItem('avatar') || '')
+
+// 角色中文标签
+const roleLabel = computed(
+  () =>
+    ({
+      system_admin: '系统管理员',
+      enterprise_admin: '企业管理员',
+      user: '承包人',
+    })[userRole.value] || '用户'
+)
 
 // 获取用户名
 const fetchUserName = async () => {
@@ -623,7 +639,12 @@ onMounted(() => {
 }
 
 .sidebar.collapsed {
-  width: 64px;
+  width: 0;
+}
+
+.sidebar.collapsed .logo,
+.sidebar.collapsed .sidebar-menu {
+  visibility: hidden;
 }
 
 .logo {
@@ -788,11 +809,71 @@ onMounted(() => {
 .user-info {
   display: flex;
   align-items: center;
+  gap: 10px;
   cursor: pointer;
+  padding: 5px 14px 5px 6px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(64, 158, 255, 0.18);
+  transition: all 0.3s ease;
+  outline: none;
 }
 
-.user-info span {
-  margin: 0 8px;
+.user-info:hover,
+.user-info:focus-visible {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(64, 158, 255, 0.45);
+  box-shadow: 0 8px 20px rgba(64, 158, 255, 0.25);
+}
+
+.avatar-ring {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #409eff, #67c23a);
+  transition: transform 0.3s ease;
+}
+
+.user-info:hover .avatar-ring {
+  transform: scale(1.06);
+}
+
+.avatar-ring :deep(.el-avatar) {
+  border: 2px solid #fff;
+  background: #409eff;
+  font-weight: 600;
+}
+
+.user-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #303133;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-role {
+  font-size: 11px;
+  color: #909399;
+}
+
+.arrow-icon {
+  color: #909399;
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+.user-info:hover .arrow-icon {
+  transform: translateY(2px);
 }
 
 /* 多标签窗口栏 */
@@ -870,6 +951,33 @@ onMounted(() => {
   .sidebar.collapsed {
     left: -240px;
   }
+}
+</style>
+
+<style>
+/* 右上角用户下拉面板（teleport 到 body，需全局样式） */
+.user-dropdown-popper .el-dropdown-menu {
+  padding: 6px 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.user-dropdown-popper .el-dropdown-menu__item {
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #303133;
+  transition: all 0.2s ease;
+}
+.user-dropdown-popper .el-dropdown-menu__item:not(.is-disabled):hover {
+  background: linear-gradient(90deg, rgba(64, 158, 255, 0.1), rgba(102, 177, 255, 0.18));
+  color: #409eff;
+  padding-left: 20px;
+}
+.user-dropdown-popper .el-dropdown-menu__item--divided {
+  border-top: 1px solid #f0f2f5;
+  margin-top: 0;
+}
+.user-dropdown-popper .el-dropdown-menu__item--divided::before {
+  display: none;
 }
 </style>
  

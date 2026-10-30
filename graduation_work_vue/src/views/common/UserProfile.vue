@@ -374,17 +374,20 @@ onMounted(() => {
 
 <style scoped>
 .user-profile {
-  padding: 30px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ed 100%);
+  padding: 24px;
+  background: transparent;
   min-height: calc(100vh - 60px);
 }
 
 .profile-header {
-  margin-bottom: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 30px;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 24px 28px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .header-content {
@@ -399,12 +402,12 @@ onMounted(() => {
 }
 
 .user-avatar {
-  background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
-  font-size: 32px;
-  font-weight: 700;
-  color: white;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: #eaf3ec;
+  color: #3f7d52;
+  font-size: 30px;
+  font-weight: 600;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(63, 125, 82, 0.2);
 }
 
 .avatar-ring {
@@ -413,33 +416,20 @@ onMounted(() => {
   left: -6px;
   right: -6px;
   bottom: -6px;
-  border: 3px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(63, 125, 82, 0.35);
   border-radius: 50%;
-  animation: pulse-ring 2s ease-out infinite;
-}
-
-@keyframes pulse-ring {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1.15);
-    opacity: 0;
-  }
 }
 
 .header-text h1 {
-  font-size: 26px;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 8px 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 22px;
+  font-weight: 600;
+  color: #2f4034;
+  margin: 0 0 6px 0;
 }
 
 .welcome-text {
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  color: #6f7d72;
   margin: 0;
 }
 
@@ -450,25 +440,30 @@ onMounted(() => {
 
 .info-card,
 .edit-card {
-  margin-bottom: 24px;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
   overflow: hidden;
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
+  transition: box-shadow 0.3s ease;
 }
 
 .info-card:hover,
 .edit-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.09);
 }
 
 :deep(.el-card__header) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 18px 24px;
-  border-bottom: none;
+  background: transparent;
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(47, 64, 52, 0.06);
+}
+
+:deep(.el-card) {
+  --el-card-bg-color: transparent;
 }
 
 :deep(.el-card__body) {
@@ -484,14 +479,15 @@ onMounted(() => {
 .header-title {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 18px;
+  gap: 8px;
+  font-size: 16px;
   font-weight: 600;
-  color: #ffffff;
+  color: #2f4034;
 }
 
 .header-title .el-icon {
-  font-size: 22px;
+  font-size: 18px;
+  color: #3f7d52;
 }
 
 .header-actions {
@@ -512,8 +508,8 @@ onMounted(() => {
 }
 
 :deep(.el-descriptions__label) {
-  background-color: #f0f2f5;
-  color: #606266;
+  background-color: rgba(238, 243, 239, 0.8);
+  color: #52604f;
   font-weight: 600;
 }
 
@@ -522,7 +518,7 @@ onMounted(() => {
 }
 
 .highlight-value {
-  color: #409eff;
+  color: #3f7d52;
   font-weight: 600;
 }
 
@@ -558,11 +554,11 @@ onMounted(() => {
 }
 
 :deep(.el-input__wrapper:hover) {
-  box-shadow: 0 0 0 1px #667eea inset;
+  box-shadow: 0 0 0 1px #3f7d52 inset;
 }
 
 :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px #667eea inset;
+  box-shadow: 0 0 0 1px #3f7d52 inset;
 }
 
 :deep(.el-input__prefix .el-icon) {
@@ -576,16 +572,17 @@ onMounted(() => {
 }
 
 :deep(.el-button--primary) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
+  background: #3f7d52;
+  border-color: #3f7d52;
   border-radius: 20px;
   transition: all 0.3s ease;
 }
 
 :deep(.el-button--primary:hover) {
-  background: linear-gradient(135deg, #7c8ff5 0%, #8a5db3 100%);
+  background: #4a9160;
+  border-color: #4a9160;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(63, 125, 82, 0.35);
 }
 
 :deep(.el-button--default) {

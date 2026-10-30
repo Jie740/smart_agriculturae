@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.service.TokenStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -97,7 +98,7 @@ public class ChatController {
     }
 
     @PostMapping(value = "/chat-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter chatStream(@RequestBody ChatRequestDto chatRequestDto) {
+    public SseEmitter chatStream(@Valid @RequestBody ChatRequestDto chatRequestDto) {
         Long userId = SecurityUtil.getUserId();
         String text = chatRequestDto.getText() == null ? "" : chatRequestDto.getText().trim();
         if (text.isBlank() && (chatRequestDto.getAttachments() == null || chatRequestDto.getAttachments().isEmpty())) {

@@ -1,11 +1,18 @@
 package com.clj.ai.dto;
 
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.util.List;
 
 @Data
 public class ChatRequestDto {
+
+    /**
+     * 用户输入文本最大字符数
+     */
+    public static final int MAX_TEXT_LENGTH = 2000;
+
     /**
      * 模型名称
      */
@@ -23,6 +30,7 @@ public class ChatRequestDto {
     /**
      * 用户输入文本
      */
+    @Size(max = MAX_TEXT_LENGTH, message = "输入文本不能超过" + MAX_TEXT_LENGTH + "个字符")
     private String text;
 
     /**

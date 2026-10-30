@@ -28,7 +28,7 @@ public class AssistantConfig {
                 .modelName("qwen3.8-flash")
                 .baseUrl("https://dashscope.aliyuncs.com/compatible-mode/v1")
                 .temperature(0.3)  //温度：介于0~2
-                .maxTokens(1024)  //最大生成 tokens 数：介于1~4096
+                .maxTokens(2048)  //最大生成 tokens 数：介于1~4096
                 .timeout(ofSeconds(20))
 //                .logRequests(true)  //日志：请求日志
                 .logResponses(true)  //日志：响应日志

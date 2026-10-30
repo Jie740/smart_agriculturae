@@ -5,28 +5,34 @@
     </div>
 
     <div class="filter-bar">
-      <el-select
-        v-model="selectedLandId"
-        placeholder="请选择地块"
-        style="width: 300px"
-        @change="handleLandChange"
-      >
-        <el-option
-          v-for="item in landList"
-          :key="item.landId"
-          :label="item.landName"
-          :value="item.landId"
+      <div class="filter-item">
+        <span class="filter-label">地块</span>
+        <el-select
+          v-model="selectedLandId"
+          placeholder="请选择地块"
+          style="width: 260px"
+          @change="handleLandChange"
+        >
+          <el-option
+            v-for="item in landList"
+            :key="item.landId"
+            :label="item.landName"
+            :value="item.landId"
+          />
+        </el-select>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">日期</span>
+        <el-date-picker
+          v-model="selectedDate"
+          type="date"
+          placeholder="请选择日期"
+          style="width: 200px"
+          format="YYYY-MM-DD"
+          value-format="YYYY-MM-DD"
+          @change="handleDateChange"
         />
-      </el-select>
-      <el-date-picker
-        v-model="selectedDate"
-        type="date"
-        placeholder="请选择日期"
-        style="width: 200px"
-        format="YYYY-MM-DD"
-        value-format="YYYY-MM-DD"
-        @change="handleDateChange"
-      />
+      </div>
     </div>
 
     <div class="charts-container" v-loading="loading">
@@ -367,12 +373,16 @@ onBeforeUnmount(() => {
 <style scoped>
 .crop-monitor {
   padding: 20px;
-  background-color: #f5f7fa;
+  background: transparent;
   min-height: 100vh;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  margin: 0;
 }
 
 .header {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  text-align: center;
 }
 
 .header h1 {
@@ -386,7 +396,28 @@ onBeforeUnmount(() => {
   margin-bottom: 20px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 32px;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #52604f;
+  white-space: nowrap;
 }
 
 .charts-container {
@@ -402,10 +433,13 @@ onBeforeUnmount(() => {
 
 .chart-card {
   flex: 1;
-  background-color: #fff;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
   border-radius: 8px;
   padding: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .chart-card h3 {
@@ -413,6 +447,9 @@ onBeforeUnmount(() => {
   font-weight: 600;
   color: #303133;
   margin: 0 0 10px 0;
+  padding-left: 8px;
+  border-left: 3px solid #3f7d52;
+  line-height: 1.2;
 }
 
 .chart {

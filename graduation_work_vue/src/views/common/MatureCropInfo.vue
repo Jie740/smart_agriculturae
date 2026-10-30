@@ -103,7 +103,7 @@
 
     <div class="table-section">
       <h3>成熟作物记录</h3>
-      <el-table :data="cropList" border stripe v-loading="tableLoading" max-height="300">
+      <el-table :data="cropList" class="tbl-teal" border stripe v-loading="tableLoading" max-height="300">
         <el-table-column prop="matureCropId" label="ID" width="80" align="center" />
         <el-table-column prop="landName" label="地块名称" width="150" align="center" />
         <el-table-column prop="cropName" label="农作物名称" width="150" align="center" />
@@ -642,9 +642,12 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .mature-crop-monitor {
-  padding: 15px;
-  background-color: #f5f7fa;
-  min-height: 100%;
+  padding: 20px;
+  background: transparent;
+  min-height: 100vh;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  margin: 0;
 }
 
 .header {
@@ -744,7 +747,7 @@ onBeforeUnmount(() => {
 
 .table-section {
   margin-top: 20px;
-  background-color: #fff;
+  background: rgba(255, 255, 255, 0.82);
   border-radius: 8px;
   padding: 15px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);

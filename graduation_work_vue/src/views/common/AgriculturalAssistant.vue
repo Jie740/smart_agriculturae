@@ -120,14 +120,15 @@
                     <el-image
                       v-if="isImageAttachment(attachment)"
                       class="message-image"
-                      :src="attachment.url"
-                      :preview-src-list="[attachment.url]"
+                      :src="resolveAttachmentUrl(attachment.url)"
+                      :preview-src-list="[resolveAttachmentUrl(attachment.url)]"
+                      :preview-teleported="true"
                       fit="cover"
                     />
                     <a
                       v-else
                       class="message-file"
-                      :href="attachment.url"
+                      :href="resolveAttachmentUrl(attachment.url)"
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -203,8 +204,9 @@
               <el-image
                 v-if="isImageAttachment(attachment)"
                 class="attachment-thumb"
-                :src="attachment.url"
-                :preview-src-list="[attachment.url]"
+                :src="resolveAttachmentUrl(attachment.url)"
+                :preview-src-list="[resolveAttachmentUrl(attachment.url)]"
+                :preview-teleported="true"
                 fit="cover"
               />
               <el-icon v-else class="attachment-file-icon"><Document /></el-icon>
@@ -225,19 +227,25 @@
           />
           <div class="composer-actions">
             <span class="hint">Ctrl + Enter 发送</span>
-            <el-button v-if="sending" type="danger" @click="stopGeneration">
-              <el-icon><VideoPause /></el-icon>
-              停止生成
-            </el-button>
-            <el-button
-              v-else
-              type="primary"
-              :disabled="!inputMessage.trim() && !attachments.length"
-              @click="sendMessage"
-            >
-              <el-icon><Promotion /></el-icon>
-              发送
-            </el-button>
+            <div class="composer-right">
+              <span v-if="isOverTextLimit" class="text-limit-warning">
+                <el-icon><WarningFilled /></el-icon>
+                文本已达 {{ inputMessage.length }} 字，超出 {{ MAX_TEXT_LENGTH }} 字上限，请精简后再发送
+              </span>
+              <el-button v-if="sending" type="danger" @click="stopGeneration">
+                <el-icon><VideoPause /></el-icon>
+                停止生成
+              </el-button>
+              <el-button
+                v-else
+                type="primary"
+                :disabled="(!inputMessage.trim() && !attachments.length) || isOverTextLimit"
+                @click="sendMessage"
+              >
+                <el-icon><Promotion /></el-icon>
+                发送
+              </el-button>
+            </div>
           </div>
         </div>
       </section>
@@ -270,6 +278,7 @@ import {
   Setting,
   User,
   VideoPause,
+  WarningFilled,
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import $API from '@/api'
@@ -278,6 +287,9 @@ import KnowledgeBaseDrawer from '@/components/rag/KnowledgeBaseDrawer.vue'
 marked.setOptions({ breaks: true, gfm: true })
 
 const inputMessage = ref('')
+// 与后端 ChatRequestDto.MAX_TEXT_LENGTH 保持一致
+const MAX_TEXT_LENGTH = 2000
+const isOverTextLimit = computed(() => inputMessage.value.length > MAX_TEXT_LENGTH)
 const messages = ref([])
 const conversations = ref([])
 const conversationId = ref(null)
@@ -375,6 +387,15 @@ const isImageAttachment = (attachment) =>
   String(attachment?.type || '')
     .toLowerCase()
     .startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(attachment?.name || '')
+
+// 附件入库的是公网域名地址（img.ajie-ai.xyz），本地开发时该域名不可达，
+// 图片缩略图和预览都会加载失败，这里在显示层重写为开发 MinIO 的局域网地址；
+// 生产构建保持原地址不变。发送给后端的 imageUrls 仍使用原始 URL。
+const DEV_MINIO_ENDPOINT = 'http://192.168.127.128:9000'
+const resolveAttachmentUrl = (url) => {
+  if (!url || !import.meta.env.DEV) return url
+  return String(url).replace(/^https?:\/\/img\.ajie-ai\.xyz/, DEV_MINIO_ENDPOINT)
+}
 
 const validateChatFile = (file) => {
   if (file.size > 10 * 1024 * 1024) {
@@ -593,6 +614,10 @@ const waitForTyping = () => {
 const submitEdit = async (message) => {
   const content = editDraft.value.trim()
   if (!content || sending.value) return
+  if (content.length > MAX_TEXT_LENGTH) {
+    ElMessage.warning(`输入文本不能超过 ${MAX_TEXT_LENGTH} 个字符`)
+    return
+  }
   const index = messages.value.findIndex((item) => item.id === message.id)
   if (index === -1) return
   messages.value = messages.value.slice(0, index + 1)
@@ -719,6 +744,10 @@ const streamMessage = async (content, replaceMessageId = null, pendingAttachment
 const sendMessage = () => {
   const content = inputMessage.value.trim()
   if ((!content && !attachments.value.length) || sending.value) return
+  if (isOverTextLimit.value) {
+    ElMessage.warning(`输入文本不能超过 ${MAX_TEXT_LENGTH} 个字符`)
+    return
+  }
   const pendingAttachments = attachments.value.slice()
   inputMessage.value = ''
   attachments.value = []
@@ -1242,9 +1271,23 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: 12px;
 }
+.composer-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .hint {
   color: #9ca3af;
   font-size: 12px;
+}
+.text-limit-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #e6a23c;
+  font-size: 12px;
+  font-weight: 500;
 }
 @media (max-width: 1024px) {
   .page-body {

@@ -30,6 +30,7 @@
     <div class="table-container">
       <el-table
         :data="recordList"
+        class="tbl-green"
         border
         stripe
         v-loading="loading"
@@ -697,7 +698,11 @@ onMounted(async () => {
 <style scoped>
 .planting-management {
   padding: 20px;
-  background-color: #f5f7fa;
+  background: transparent;
+  min-height: 100vh;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  margin: 0;
 }
 
 .header {
@@ -737,7 +742,7 @@ onMounted(async () => {
   height: calc(100vh - 280px);
   overflow: auto;
   border-radius: 8px;
-  background-color: #fff;
+  background: rgba(255, 255, 255, 0.82);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 

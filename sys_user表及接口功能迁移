@@ -1,0 +1,11 @@
+[master a047985] user表迁移-
+ 23 files changed, 503 insertions(+), 716 deletions(-)
+ delete mode 100644 graduation_work_springBoot/src/main/java/com/clj/controller/UserController.java
+ delete mode 100644 graduation_work_springBoot/src/main/java/com/clj/domain/User.java
+ create mode 100644 graduation_work_springBoot/src/main/java/com/clj/domain/dto/SysUserManageDto.java
+ delete mode 100644 graduation_work_springBoot/src/main/java/com/clj/domain/vo/UserVo.java
+ delete mode 100644 graduation_work_springBoot/src/main/java/com/clj/mapper/UserMapper.java
+ delete mode 100644 graduation_work_springBoot/src/main/java/com/clj/service/UserService.java
+ delete mode 100644 graduation_work_springBoot/src/main/java/com/clj/service/impl/UserServiceImpl.java
+ delete mode 100644 graduation_work_springBoot/src/main/resources/com/clj/mapper/UserMapper.xml
+ create mode 100644 package-lock.json

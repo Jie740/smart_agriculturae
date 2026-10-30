@@ -5,14 +5,14 @@ import com.clj.common.exception.BusinessException;
 import com.clj.domain.Equipment;
 import com.clj.domain.EquipmentRecord;
 import com.clj.domain.EquipmentRepairApply;
-import com.clj.domain.User;
+import com.clj.domain.SysUser;
 import com.clj.domain.dto.EquipmentRepairApplyDto;
 import com.clj.domain.vo.EquipmentRepairApplyVo;
 import com.clj.mapper.EquipmentRepairApplyMapper;
 import com.clj.service.EquipmentRepairApplyService;
 import com.clj.service.EquipmentService;
 import com.clj.service.EquipmentRecordService;
-import com.clj.service.UserService;
+import com.clj.service.SysUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -28,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class EquipmentRepairApplyServiceImpl extends ServiceImpl<EquipmentRepairApplyMapper, EquipmentRepairApply>
     implements EquipmentRepairApplyService{
 
-    private final UserService userService;
+    private final SysUserService sysUserService;
     private final EquipmentService equipmentService;
     private final EquipmentRecordService equipmentRecordService;
 
@@ -36,9 +36,10 @@ public class EquipmentRepairApplyServiceImpl extends ServiceImpl<EquipmentRepair
     @Transactional
     public void add(EquipmentRepairApplyDto equipmentRepairApplyDto) {
         // 根据姓名和电话查询用户是否存在
-        User user = userService.lambdaQuery()
-                .eq(User::getName, equipmentRepairApplyDto.getApplicantName())
-                .eq(User::getPhone, equipmentRepairApplyDto.getApplicantPhone())
+        SysUser user = sysUserService.lambdaQuery()
+                .eq(SysUser::getNickname, equipmentRepairApplyDto.getApplicantName())
+                .eq(SysUser::getPhone, equipmentRepairApplyDto.getApplicantPhone())
+                .eq(SysUser::getDeleted, 0)
                 .one();
 
         if (user == null) {
@@ -46,7 +47,7 @@ public class EquipmentRepairApplyServiceImpl extends ServiceImpl<EquipmentRepair
         }
 
         // 获取用户 ID
-        Long applicantId = user.getUserId();
+        Long applicantId = user.getId();
 
         //根据用户ID查询设备是否存在
         EquipmentRecord one = equipmentRecordService.lambdaQuery().eq(EquipmentRecord::getOwnerId, applicantId)
@@ -98,16 +99,17 @@ public class EquipmentRepairApplyServiceImpl extends ServiceImpl<EquipmentRepair
         Long equipmentId = equipmentRecord.getEquipmentId();
 
         // 2. 根据用户姓名和电话查询用户ID
-        User user = userService.lambdaQuery()
-                .eq(User::getName, applicantName)
-                .eq(User::getPhone, phone)
+        SysUser user = sysUserService.lambdaQuery()
+                .eq(SysUser::getNickname, applicantName)
+                .eq(SysUser::getPhone, phone)
+                .eq(SysUser::getDeleted, 0)
                 .one();
 
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
 
-        Long applicantId = user.getUserId();
+        Long applicantId = user.getId();
 
         // 3. 根据设备ID和申请人ID查询报修申请记录
         EquipmentRepairApply repairApply = this.lambdaQuery()

@@ -1,11 +1,13 @@
 package com.clj.ai.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.clj.ai.domain.AiKnowledgeBase;
 import com.clj.ai.domain.AiRagChunk;
 import com.clj.ai.domain.AiRagDocument;
 import com.clj.ai.mapper.AiRagChunkMapper;
 import com.clj.ai.mapper.AiRagDocumentMapper;
+import com.clj.ai.mapper.AiRagRetrievalMapper;
 import com.clj.ai.service.AiKnowledgeBaseService;
 import com.clj.ai.service.AiRagDocumentService;
 import com.clj.ai.service.AiRagIngestionService;
@@ -36,14 +38,16 @@ public class AiRagDocumentServiceImpl implements AiRagDocumentService {
     private final AiRagChunkMapper chunkMapper;
     private final MinioService minioService;
     private final AiRagIngestionService ingestionService;
+    private final AiRagRetrievalMapper retrievalMapper;
 
     // 支持的文件类型
     private static final List<String> SUPPORTED_FILE_TYPES = Arrays.asList(
-            "pdf", "doc", "docx", "txt", "md"
+            "pdf", "doc", "docx", "txt", "md", "xlsx", "xls", "ppt", "pptx", "csv"
     );
 
     // 文档处理状态常量
     private static final int STATUS_PENDING = 0;
+    private static final long MAX_FILE_SIZE = 10L * 1024 * 1024;
 
     @Override
     @Transactional
@@ -51,6 +55,7 @@ public class AiRagDocumentServiceImpl implements AiRagDocumentService {
 //        先查询对应的知识库ID是否存在
         boolean exists = aiKnowledgeBaseService.lambdaQuery()
                 .eq(AiKnowledgeBase::getId, knowledgeBaseId)
+                .eq(AiKnowledgeBase::getIsDeleted, false)
                 .exists();
         if (!exists){
             throw new BusinessException("知识库不存在");
@@ -117,7 +122,7 @@ public class AiRagDocumentServiceImpl implements AiRagDocumentService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteDocument(Long documentId) {
         AiRagDocument document = documentMapper.selectById(documentId);
-        if (document == null) {
+        if (document == null || Boolean.TRUE.equals(document.getIsDeleted())) {
             throw new BusinessException("文档不存在");
         }
 
@@ -136,9 +141,16 @@ public class AiRagDocumentServiceImpl implements AiRagDocumentService {
         LambdaUpdateWrapper<AiRagChunk> chunkUpdateWrapper = new LambdaUpdateWrapper<>();
         chunkUpdateWrapper.eq(AiRagChunk::getDocumentId, documentId)
                 .set(AiRagChunk::getIsDeleted, true)
+                .set(AiRagChunk::getIsActive, false)
                 .set(AiRagChunk::getDeletedAt, now)
                 .set(AiRagChunk::getDeletedBy, userId);
         chunkMapper.update(null, chunkUpdateWrapper);
+        retrievalMapper.deleteByDocumentId(documentId);
+        aiKnowledgeBaseService.lambdaUpdate()
+                .setSql("document_count = GREATEST(document_count - 1, 0)")
+                .eq(AiKnowledgeBase::getId, document.getKnowledgeBaseId())
+                .eq(AiKnowledgeBase::getIsDeleted, false)
+                .update();
 
         // 3. 删除 MinIO 文件
         if (document.getObjectName() != null) {
@@ -155,7 +167,7 @@ public class AiRagDocumentServiceImpl implements AiRagDocumentService {
     @Override
     public void reindexDocument(Long documentId) {
         AiRagDocument document = documentMapper.selectById(documentId);
-        if (document == null) {
+        if (document == null || Boolean.TRUE.equals(document.getIsDeleted())) {
             throw new BusinessException("文档不存在");
         }
 
@@ -169,6 +181,9 @@ public class AiRagDocumentServiceImpl implements AiRagDocumentService {
     private void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new BusinessException("文件不能为空");
+        }
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new BusinessException("单个文件不能超过10MB");
         }
 
         String originalFilename = file.getOriginalFilename();
@@ -191,5 +206,36 @@ public class AiRagDocumentServiceImpl implements AiRagDocumentService {
             return "";
         }
         return filename.substring(lastDotIndex + 1).toLowerCase();
+    }
+
+    @Override
+    public Page<AiRagDocument> listDocuments(Long knowledgeBaseId, String keyword, Integer pageNum, Integer pageSize) {
+        if (knowledgeBaseId == null) {
+            throw new BusinessException("知识库ID不能为空");
+        }
+        return documentMapper.selectPage(
+                new Page<>(pageNum, pageSize),
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<AiRagDocument>()
+                        .eq(AiRagDocument::getKnowledgeBaseId, knowledgeBaseId)
+                        .eq(AiRagDocument::getIsDeleted, false)
+                        .like(org.springframework.util.StringUtils.hasText(keyword), AiRagDocument::getName, keyword)
+                        .orderByDesc(AiRagDocument::getUptim));
+    }
+
+    @Override
+    public void updateDocumentName(Long documentId, String name) {
+        if (documentId == null || name == null || name.isBlank()) {
+            throw new BusinessException("文档名称不能为空");
+        }
+        AiRagDocument document = documentMapper.selectById(documentId);
+        if (document == null || Boolean.TRUE.equals(document.getIsDeleted())) {
+            throw new BusinessException("文档不存在");
+        }
+        LambdaUpdateWrapper<AiRagDocument> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(AiRagDocument::getId, documentId)
+                .set(AiRagDocument::getName, name.trim())
+                .set(AiRagDocument::getUptim, new Date())
+                .set(AiRagDocument::getUpuid, SecurityUtil.getUserId());
+        documentMapper.update(null, wrapper);
     }
 }

@@ -1,7 +1,10 @@
 package com.clj.ai.domain;
 
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import java.util.Date;
 import lombok.Data;
 
@@ -14,8 +17,12 @@ import lombok.Data;
 public class AiKnowledgeBase {
     /**
      * 知识库ID
+     * <p>
+     * 主键由 MyBatis-Plus 雪花算法生成（19 位），超过 JS Number.MAX_SAFE_INTEGER，
+     * 直接以数字返回会被前端 JSON.parse 截断精度，故序列化为字符串。
      */
     @TableId
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     /**
@@ -27,6 +34,17 @@ public class AiKnowledgeBase {
      * 知识库描述
      */
     private String description;
+
+    /**
+     * 知识库类型ID
+     */
+    private Long typeId;
+
+    /**
+     * 类型名称，仅用于列表展示
+     */
+    @TableField(exist = false)
+    private String typeName;
 
     /**
      * 状态：1启用 0禁用

@@ -31,7 +31,7 @@ import java.util.Objects;
 public class PlantingPlanAdjustServiceImpl extends ServiceImpl<PlantingPlanAdjustMapper, PlantingPlanAdjust>
     implements PlantingPlanAdjustService{
 
-    final UserService userService;
+    final SysUserService sysUserService;
     final PlantingPlanService plantingPlanService;
     final LandService landService;
     final CropService cropService;
@@ -39,13 +39,14 @@ public class PlantingPlanAdjustServiceImpl extends ServiceImpl<PlantingPlanAdjus
     @Transactional
     public void add(PlantingPlanAdjustDto plantingPlanAdjustDto) {
         //根据申请人名和手机号查询用户ID
-        User one = userService.lambdaQuery().eq(User::getName, plantingPlanAdjustDto.getApplicant())
-                .eq(User::getPhone, plantingPlanAdjustDto.getPhone())
+        SysUser one = sysUserService.lambdaQuery().eq(SysUser::getNickname, plantingPlanAdjustDto.getApplicant())
+                .eq(SysUser::getPhone, plantingPlanAdjustDto.getPhone())
+                .eq(SysUser::getDeleted, 0)
                 .one();
         if (one == null){
             throw new BusinessException("用户不存在");
         }
-        Long userId = one.getUserId();
+        Long userId = one.getId();
 
         PlantingPlanAdjust plantingPlanAdjust = new PlantingPlanAdjust();
         plantingPlanAdjust.setApplicantId(userId);
@@ -120,10 +121,12 @@ public class PlantingPlanAdjustServiceImpl extends ServiceImpl<PlantingPlanAdjus
             }
             //根据用户ID查询用户名、手机号
             if (plantingPlanAdjust.getApplicantId() != null){
-                User user = userService.lambdaQuery().eq(User::getUserId, plantingPlanAdjust.getApplicantId())
+                SysUser user = sysUserService.lambdaQuery()
+                        .eq(SysUser::getId, plantingPlanAdjust.getApplicantId())
+                        .eq(SysUser::getDeleted, 0)
                         .one();
                 if (user != null){
-                    vo.setApplicant(user.getName());
+                    vo.setApplicant(user.getNickname());
                     vo.setPhone(user.getPhone());
                 }
             }
@@ -145,19 +148,20 @@ public class PlantingPlanAdjustServiceImpl extends ServiceImpl<PlantingPlanAdjus
         ArrayList<PlantingPlanAdjustVo> vos = new ArrayList<>();
 
         // 1. 根据用户名模糊查询获取用户 ID 列表，再查找对应的计划调整记录
-        Page<User> userPage = new Page<>(pageNum, pageSize);
-        Page<User> users = userService.lambdaQuery()
-                .like(User::getName, keyword)
+        Page<SysUser> userPage = new Page<>(pageNum, pageSize);
+        Page<SysUser> users = sysUserService.lambdaQuery()
+                .eq(SysUser::getDeleted, 0)
+                .like(SysUser::getNickname, keyword)
                 .page(userPage);
 
-        for (User user : users.getRecords()){
+        for (SysUser user : users.getRecords()){
             PlantingPlanAdjust plantingPlanAdjust = this.lambdaQuery()
-                    .eq(PlantingPlanAdjust::getApplicantId, user.getUserId())
+                    .eq(PlantingPlanAdjust::getApplicantId, user.getId())
                     .one();
 
             if (plantingPlanAdjust != null){
                 PlantingPlanAdjustVo vo = buildVoFromRecord(plantingPlanAdjust);
-                vo.setApplicant(user.getName());
+                vo.setApplicant(user.getNickname());
                 vo.setPhone(user.getPhone());
                 vos.add(vo);
             }
@@ -196,13 +200,14 @@ public class PlantingPlanAdjustServiceImpl extends ServiceImpl<PlantingPlanAdjus
 
     @Override
     public void updatePlantingPlanAdjust(PlantingPlanAdjustDto plantingPlanAdjustDto) {
-        User user = userService.lambdaQuery().eq(User::getName, plantingPlanAdjustDto.getApplicant())
-                .eq(User::getPhone, plantingPlanAdjustDto.getPhone())
+        SysUser user = sysUserService.lambdaQuery().eq(SysUser::getNickname, plantingPlanAdjustDto.getApplicant())
+                .eq(SysUser::getPhone, plantingPlanAdjustDto.getPhone())
+                .eq(SysUser::getDeleted, 0)
                 .one();
         if (user == null){
             throw new BusinessException("用户不存在");
         }
-        Long userId = user.getUserId();
+        Long userId = user.getId();
         PlantingPlanAdjust plantingPlanAdjust = new PlantingPlanAdjust();
         plantingPlanAdjust.setApplicantId(userId);
         BeanUtils.copyProperties(plantingPlanAdjustDto, plantingPlanAdjust);
@@ -226,9 +231,12 @@ public class PlantingPlanAdjustServiceImpl extends ServiceImpl<PlantingPlanAdjus
             vo.setPlanName(plantingPlan.getPlanName());
             // 查询创建人信息
             if (plantingPlan.getCreatorId() != null) {
-                User creator = userService.lambdaQuery().eq(User::getUserId, plantingPlan.getCreatorId()).one();
+                SysUser creator = sysUserService.lambdaQuery()
+                        .eq(SysUser::getId, plantingPlan.getCreatorId())
+                        .eq(SysUser::getDeleted, 0)
+                        .one();
                 if (creator != null) {
-                    vo.setCreator(creator.getName());
+                    vo.setCreator(creator.getNickname());
                 }
             }
         }
@@ -249,9 +257,12 @@ public class PlantingPlanAdjustServiceImpl extends ServiceImpl<PlantingPlanAdjus
 
         //根据申请人ID查询申请人姓名和电话
         if (plantingPlanAdjust.getApplicantId() != null) {
-            User applicant = userService.lambdaQuery().eq(User::getUserId, plantingPlanAdjust.getApplicantId()).one();
+            SysUser applicant = sysUserService.lambdaQuery()
+                    .eq(SysUser::getId, plantingPlanAdjust.getApplicantId())
+                    .eq(SysUser::getDeleted, 0)
+                    .one();
             if (applicant != null) {
-                vo.setApplicant(applicant.getName());
+                vo.setApplicant(applicant.getNickname());
                 vo.setPhone(applicant.getPhone());
             }
         }
@@ -271,11 +282,12 @@ public class PlantingPlanAdjustServiceImpl extends ServiceImpl<PlantingPlanAdjus
 
         // 根据申请人 ID 查询用户名和手机号
         if (plantingPlanAdjust.getApplicantId() != null){
-            User user = userService.lambdaQuery()
-                    .eq(User::getUserId, plantingPlanAdjust.getApplicantId())
+            SysUser user = sysUserService.lambdaQuery()
+                    .eq(SysUser::getId, plantingPlanAdjust.getApplicantId())
+                    .eq(SysUser::getDeleted, 0)
                     .one();
             if (user != null){
-                vo.setApplicant(user.getName());
+                vo.setApplicant(user.getNickname());
                 vo.setPhone(user.getPhone());
             }
         }

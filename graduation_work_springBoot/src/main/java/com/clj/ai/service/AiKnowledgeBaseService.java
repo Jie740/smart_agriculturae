@@ -49,5 +49,5 @@ public interface AiKnowledgeBaseService extends IService<AiKnowledgeBase> {
      * @param pageSize 每页数量
      * @return 分页结果
      */
-    Page<AiKnowledgeBase> getKnowledgeBasesByPage(String keyword, Integer pageNum, Integer pageSize);
+    Page<AiKnowledgeBase> getKnowledgeBasesByPage(String keyword, Long typeId, Integer pageNum, Integer pageSize);
 }

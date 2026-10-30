@@ -6,7 +6,7 @@ import com.clj.common.exception.BusinessException;
 import com.clj.domain.ContractorMaterialStock;
 import com.clj.domain.Material;
 import com.clj.domain.MaterialType;
-import com.clj.domain.User;
+import com.clj.domain.SysUser;
 import com.clj.domain.dto.ContractorMaterialStockDto;
 import com.clj.domain.vo.ContractorMaterialStockVo;
 import com.clj.security.util.SecurityUtil;
@@ -14,7 +14,7 @@ import com.clj.service.ContractorMaterialStockService;
 import com.clj.mapper.ContractorMaterialStockMapper;
 import com.clj.service.MaterialService;
 import com.clj.service.MaterialTypeService;
-import com.clj.service.UserService;
+import com.clj.service.SysUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -36,7 +36,7 @@ public class ContractorMaterialStockServiceImpl extends ServiceImpl<ContractorMa
 
     private final MaterialService materialService;
     private final MaterialTypeService materialTypeService;
-    private final UserService userService;
+    private final SysUserService sysUserService;
 
     @Override
     public void add(ContractorMaterialStock contractorMaterialStock) {
@@ -99,16 +99,16 @@ public class ContractorMaterialStockServiceImpl extends ServiceImpl<ContractorMa
         }
 
         // 批量查询用户信息
-        ArrayList<User> users = new ArrayList<>();
+        ArrayList<SysUser> users = new ArrayList<>();
         if (!userIds.isEmpty()) {
-            users = (ArrayList<User>) userService.listByIds(userIds);
+            users = (ArrayList<SysUser>) sysUserService.listByIds(userIds);
         }
 
         // 转换为 Map 便于快速查找
         Map<Long, Material> materialMap = materials.stream()
                 .collect(Collectors.toMap(Material::getMaterialId, m -> m));
-        Map<Long, User> userMap = users.stream()
-                .collect(Collectors.toMap(User::getUserId, u -> u));
+        Map<Long, SysUser> userMap = users.stream()
+                .collect(Collectors.toMap(SysUser::getId, u -> u));
 
         // 构建 VO 对象
         ArrayList<ContractorMaterialStockVo> voList = new ArrayList<>();
@@ -133,9 +133,9 @@ public class ContractorMaterialStockServiceImpl extends ServiceImpl<ContractorMa
             }
 
             // 从 Map 中获取用户信息
-            User user = userMap.get(stock.getUserId());
+            SysUser user = userMap.get(stock.getUserId());
             if (user != null) {
-                vo.setContractorName(user.getName());
+                vo.setContractorName(user.getNickname());
                 vo.setPhone(user.getPhone());
             }
 
@@ -154,8 +154,9 @@ public class ContractorMaterialStockServiceImpl extends ServiceImpl<ContractorMa
         }
 
         // 根据承包人姓名模糊查询用户
-        List<User> matchedUsers = userService.lambdaQuery()
-                .like(User::getName, keyword)
+        List<SysUser> matchedUsers = sysUserService.lambdaQuery()
+                .eq(SysUser::getDeleted, 0)
+                .like(SysUser::getNickname, keyword)
                 .list();
 
         // 如果没有匹配的用户，返回空结果
@@ -167,7 +168,7 @@ public class ContractorMaterialStockServiceImpl extends ServiceImpl<ContractorMa
 
         // 获取匹配的用户 ID 列表
         ArrayList<Long> userIds = matchedUsers.stream()
-                .map(User::getUserId)
+                .map(SysUser::getId)
                 .collect(Collectors.toCollection(ArrayList::new));
 
         // 根据用户 ID 分页查询承包人农资库存记录
@@ -192,8 +193,8 @@ public class ContractorMaterialStockServiceImpl extends ServiceImpl<ContractorMa
         // 转换为 Map 便于快速查找
         Map<Long, Material> materialMap = materials.stream()
                 .collect(Collectors.toMap(Material::getMaterialId, m -> m));
-        Map<Long, User> userMap = matchedUsers.stream()
-                .collect(Collectors.toMap(User::getUserId, u -> u));
+        Map<Long, SysUser> userMap = matchedUsers.stream()
+                .collect(Collectors.toMap(SysUser::getId, u -> u));
 
         // 构建 VO 对象
         ArrayList<ContractorMaterialStockVo> voList = new ArrayList<>();
@@ -218,9 +219,9 @@ public class ContractorMaterialStockServiceImpl extends ServiceImpl<ContractorMa
             }
 
             // 从 Map 中获取用户信息
-            User user = userMap.get(stock.getUserId());
+            SysUser user = userMap.get(stock.getUserId());
             if (user != null) {
-                vo.setContractorName(user.getName());
+                vo.setContractorName(user.getNickname());
                 vo.setPhone(user.getPhone());
             }
 
@@ -279,16 +280,16 @@ public class ContractorMaterialStockServiceImpl extends ServiceImpl<ContractorMa
         }
 
         // 批量查询用户信息
-        ArrayList<User> users = new ArrayList<>();
+        ArrayList<SysUser> users = new ArrayList<>();
         if (!userIds.isEmpty()) {
-            users = (ArrayList<User>) userService.listByIds(userIds);
+            users = (ArrayList<SysUser>) sysUserService.listByIds(userIds);
         }
 
         // 转换为 Map 便于快速查找
         Map<Long, Material> materialMap = materials.stream()
                 .collect(Collectors.toMap(Material::getMaterialId, m -> m));
-        Map<Long, User> userMap = users.stream()
-                .collect(Collectors.toMap(User::getUserId, u -> u));
+        Map<Long, SysUser> userMap = users.stream()
+                .collect(Collectors.toMap(SysUser::getId, u -> u));
 
         // 构建 VO 对象
         ArrayList<ContractorMaterialStockVo> voList = new ArrayList<>();
@@ -313,9 +314,9 @@ public class ContractorMaterialStockServiceImpl extends ServiceImpl<ContractorMa
             }
 
             // 从 Map 中获取用户信息
-            User user = userMap.get(stock.getUserId());
+            SysUser user = userMap.get(stock.getUserId());
             if (user != null) {
-                vo.setContractorName(user.getName());
+                vo.setContractorName(user.getNickname());
                 vo.setPhone(user.getPhone());
             }
 

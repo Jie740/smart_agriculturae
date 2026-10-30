@@ -87,9 +87,12 @@ public class AuthServiceImpl implements AuthService {
         // 6. 返回登录结果
         Map<String, String> map = new HashMap<>();
         map.put("token", token);
+        map.put("id", String.valueOf(loginUser.getUserId()));
         map.put("role", loginUser.getRole());
         map.put("username", loginUser.getUsername());
+        map.put("nickname", loginUser.getNickname());
         map.put("name", loginUser.getNickname());
+        map.put("avatar", loginUser.getAvatar());
         return Result.success(map);
     }
 

@@ -1,14 +1,14 @@
 import request from '../utils/request'
 
-// 用户相关
+// 用户相关（sys_user 表 + RBAC）
 const USER_URLS = {
-  ADD_USER: '/user/addUser',
-  DELETE_USER: '/user/deleteUser',
-  UPDATE_USER: '/user/updateUser',
-  GET_USERS_BY_PAGE: '/user/getUsersByPage',
-  SEARCH_USERS_BY_PAGE: '/user/searchUsersByPage',
-  SEARCH_USERS_BY_NAME_AND_PHONE: '/user/searchUserByNameAndPhone',
-  GET_NAME: '/user/getName',
+  ADD_USER: '/sys-user/manage/add',
+  DELETE_USER: '/sys-user/delete',
+  UPDATE_USER: '/sys-user/manage/update',
+  GET_USERS_BY_PAGE: '/sys-user/page',
+  SEARCH_USERS_BY_PAGE: '/sys-user/search',
+  SEARCH_USERS_BY_NAME_AND_PHONE: '/sys-user/contractor',
+  GET_NAME: '/sys-user/name',
 }
 
 // 地块相关
@@ -62,13 +62,16 @@ const api = {
     return request({ url: USER_URLS.UPDATE_USER, method: 'post', data })
   },
   updatePassword(data) {
-    return request({ url: '/user/updatePassword', method: 'put', data })
+    return request({ url: '/sys-user/password', method: 'put', data })
   },
   getUserInfo() {
-    return request({ url: '/user/getUserInfo', method: 'get' })
+    return request({ url: '/sys-user/info', method: 'get' })
   },
   getName() {
     return request({ url: USER_URLS.GET_NAME, method: 'get' })
+  },
+  updateCurrentUser(data) {
+    return request({ url: '/sys-user/profile', method: 'put', data })
   },
   getUsersByPage(pageNum, pageSize) {
     return request({ url: `${USER_URLS.GET_USERS_BY_PAGE}/${pageNum}/${pageSize}`, method: 'get' })
@@ -81,20 +84,20 @@ const api = {
   },
   updateUserStatus(userId, status) {
     return request({
-      url: `/user/updateUserStatus/${userId}/${status}`,
+      url: `/sys-user/status/${userId}/${status}`,
       method: 'put',
     })
   },
   // 承包人相关
   getContractorsByPage(pageNum, pageSize) {
     return request({
-      url: `/user/getContractorsByPage/${pageNum}/${pageSize}`,
+      url: `/sys-user/contractors/${pageNum}/${pageSize}`,
       method: 'get',
     })
   },
   searchContractorsByPage(keyword, pageNum, pageSize) {
     return request({
-      url: `/user/searchContractorsByPage/${keyword}/${pageNum}/${pageSize}`,
+      url: `/sys-user/contractors/search/${keyword}/${pageNum}/${pageSize}`,
       method: 'get',
     })
   },
@@ -273,6 +276,12 @@ const api = {
   getEquipmentNameAndTypeNameById(applyId) {
     return request({
       url: `/equipmentApply/getEquipmentNameAndTypeNameById/${applyId}`,
+      method: 'get',
+    })
+  },
+  getEquipmentApplyById(applyId) {
+    return request({
+      url: `/equipmentApply/getEquipmentApplyById/${applyId}`,
       method: 'get',
     })
   },
@@ -670,17 +679,110 @@ const api = {
   },
 
   // 农业智能助手相关
-  getChatHistory() {
+  // 聊天附件（图片 / pdf、word 等文件）：只存 MinIO 并返回公网访问地址，
+  // 不写入知识库、不做向量化；图片由模型多模态识别，文件由后端解析出文本给模型
+  uploadChatFile(file) {
+    const formData = new FormData()
+    formData.append('file', file)
     return request({
-      url: '/assistant/history',
-      method: 'get',
+      url: '/ai/file/upload',
+      method: 'post',
+      data: formData,
+      timeout: 120000,
     })
   },
-  clearChatHistory() {
+  listKnowledgeBases({ keyword = '', typeId, pageNum = 1, pageSize = 100 } = {}) {
+    const encodedKeyword = encodeURIComponent(keyword)
     return request({
-      url: '/assistant/clear',
-      method: 'delete',
+      url: keyword
+        ? `/ai/knowledgeBase/searchByPage/${encodedKeyword}/${pageNum}/${pageSize}`
+        : `/ai/knowledgeBase/getByPage/${pageNum}/${pageSize}`,
+      method: 'get',
+      params: typeId ? { typeId } : undefined,
     })
+  },
+  addKnowledgeBase(data) {
+    return request({ url: '/ai/knowledgeBase/add', method: 'post', data })
+  },
+  updateKnowledgeBase(data) {
+    return request({ url: '/ai/knowledgeBase/update', method: 'put', data })
+  },
+  deleteKnowledgeBase(id) {
+    return request({ url: `/ai/knowledgeBase/delete/${id}`, method: 'delete' })
+  },
+  listKnowledgeBaseTypes(params = {}) {
+    return request({ url: '/ai/knowledgeBaseType/list', method: 'get', params })
+  },
+  addKnowledgeBaseType(data) {
+    return request({ url: '/ai/knowledgeBaseType/add', method: 'post', data })
+  },
+  updateKnowledgeBaseType(data) {
+    return request({ url: '/ai/knowledgeBaseType/update', method: 'put', data })
+  },
+  deleteKnowledgeBaseType(id) {
+    return request({ url: `/ai/knowledgeBaseType/delete/${id}`, method: 'delete' })
+  },
+  listRagDocuments(knowledgeBaseId, params = {}) {
+    return request({
+      url: '/ai/rag/document/list',
+      method: 'get',
+      params: { knowledgeBaseId, ...params },
+    })
+  },
+  // 知识库文档上传：写入 ai_rag_document 并触发解析/切片/向量化。
+  // knowledgeBaseId 为雪花 ID（19 位），必须以字符串传递，不能经过 Number()
+  uploadRagDocument(file, knowledgeBaseId) {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('knowledgeBaseId', String(knowledgeBaseId))
+    return request({
+      url: '/ai/rag/document/upload',
+      method: 'post',
+      data: formData,
+      timeout: 120000,
+    })
+  },
+  deleteRagDocument(documentId) {
+    return request({ url: `/ai/rag/document/${documentId}`, method: 'delete' })
+  },
+  reindexRagDocument(documentId) {
+    return request({ url: `/ai/rag/document/${documentId}/reindex`, method: 'post' })
+  },
+  updateRagDocument(data) {
+    return request({ url: '/ai/rag/document/update', method: 'put', data })
+  },
+  searchRag(data) {
+    return request({ url: '/ai/rag/search', method: 'post', data })
+  },
+  listConversations() {
+    return request({ url: '/ai/conversations', method: 'get' })
+  },
+  createConversation(data = {}) {
+    return request({ url: '/ai/conversations', method: 'post', data })
+  },
+  updateConversation(id, data) {
+    return request({ url: `/ai/conversations/${id}`, method: 'put', data })
+  },
+  deleteConversation(id) {
+    return request({ url: `/ai/conversations/${id}`, method: 'delete' })
+  },
+  listConversationMessages(id) {
+    return request({ url: `/ai/conversations/${id}/messages`, method: 'get' })
+  },
+  updateChatMessage(id, data) {
+    return request({ url: `/ai/messages/${id}`, method: 'put', data })
+  },
+  deleteChatMessage(id) {
+    return request({ url: `/ai/messages/${id}`, method: 'delete' })
+  },
+  deleteMessagesAfter(id) {
+    return request({ url: `/ai/messages/${id}/after`, method: 'delete' })
+  },
+  getChatHistory() {
+    return this.listConversations()
+  },
+  clearChatHistory() {
+    return request({ url: '/ai/conversations', method: 'delete' })
   },
 
   // 设备报修申请相关 (EquipmentRepairApplyController)

@@ -92,10 +92,16 @@ const handleLogin = async () => {
     }
 
     localStorage.setItem('token', tokenData.token)
+    if (tokenData.id) localStorage.setItem('id', String(tokenData.id))
     localStorage.setItem('role', normalizeRole(tokenData.role))
     if (tokenData.username) {
       localStorage.setItem('username', tokenData.username)
     }
+    if (tokenData.nickname || tokenData.name) {
+      localStorage.setItem('nickname', tokenData.nickname || tokenData.name)
+    }
+    localStorage.setItem('avatar', tokenData.avatar || '')
+    window.dispatchEvent(new CustomEvent('userInfoUpdated', { detail: tokenData }))
 
     ElMessage.success('Login successful')
 

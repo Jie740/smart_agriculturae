@@ -25,7 +25,13 @@ public interface AiRagChunkMapper extends BaseMapper<AiRagChunk> {
      */
     List<ChunkSimilarityDto> searchSimilar(@Param("queryVector") PGvector queryVector,
                                            @Param("topK") int topK,
-                                           @Param("knowledgeBaseIds") List<Long> knowledgeBaseIds);
+                                           @Param("knowledgeBaseIds") List<Long> knowledgeBaseIds,
+                                           @Param("documentIds") List<Long> documentIds);
+
+    default List<ChunkSimilarityDto> searchSimilar(PGvector queryVector, int topK,
+                                                   List<Long> knowledgeBaseIds) {
+        return searchSimilar(queryVector, topK, knowledgeBaseIds, List.of());
+    }
 
     /**
      * 查询指定文档的所有分块

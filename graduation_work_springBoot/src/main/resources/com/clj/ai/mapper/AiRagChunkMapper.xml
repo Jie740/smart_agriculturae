@@ -46,7 +46,13 @@
         WHERE c.is_active = true
         AND c.is_deleted = false
         AND c.embedding IS NOT NULL
-        <if test="knowledgeBaseIds != null and knowledgeBaseIds.size() > 0">
+        <if test="documentIds != null and documentIds.size() > 0">
+            AND c.document_id IN
+            <foreach collection="documentIds" item="documentId" open="(" separator="," close=")">
+                #{documentId}
+            </foreach>
+        </if>
+        <if test="(documentIds == null or documentIds.size() == 0) and knowledgeBaseIds != null and knowledgeBaseIds.size() > 0">
             AND d.knowledge_base_id IN
             <foreach collection="knowledgeBaseIds" item="kbId" open="(" separator="," close=")">
                 #{kbId}

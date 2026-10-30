@@ -17,7 +17,7 @@ public class BizConversation {
     /**
      * 主键ID
      */
-    @TableId
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**

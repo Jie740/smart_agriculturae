@@ -21,7 +21,10 @@ spring:
       database: 1
 
 minio:
+  # 内网直连地址，仅后端读写文件时使用
   endpoint: http://192.168.127.128:9000
+  # 对外访问域名（服务器已把 img.ajie-ai.xyz 绑定到 MinIO），入库和给模型用的都是这个地址
+  public-base-url: http://img.ajie-ai.xyz
   accessKey: admin
   secretKey: 12345678
   bucketName: agriculture

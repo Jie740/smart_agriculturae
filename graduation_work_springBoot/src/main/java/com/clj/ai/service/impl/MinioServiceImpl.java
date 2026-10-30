@@ -15,6 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -26,20 +28,21 @@ public class MinioServiceImpl implements MinioService {
 
     private final MinioProperties properties;
 
-    public String upload(MultipartFile file) {
-
+    public String upload(MultipartFile file, String folder) {
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("文件不能为空");
+        }
+        if (file.getSize() > 10L * 1024 * 1024) {
+            throw new BusinessException("单个附件不能超过10MB");
+        }
         try {
-
-            String dir="images/";
-            String fileName =
-                    UUID.randomUUID() +
-                            "_" +
-                            file.getOriginalFilename();
+            String dir = folder.endsWith("/") ? folder : folder + "/";
+            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
 
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(properties.getBucketName())
-                            .object(dir+fileName)
+                            .object(dir + fileName)
                             .stream(
                                     file.getInputStream(),
                                     file.getSize(),
@@ -49,17 +52,9 @@ public class MinioServiceImpl implements MinioService {
                             .build()
             );
 
-            log.info("上传图片成功: {}", properties.getEndpoint()
-                    + "/"
-                    + properties.getBucketName()
-                    + "/"
-                    + dir+fileName);
-
-            return properties.getEndpoint()
-                    + "/"
-                    + properties.getBucketName()
-                    + "/"
-                    + dir+fileName;
+            String url = publicUrl(dir + fileName);
+            log.info("上传附件成功: {}", url);
+            return url;
 
         } catch (Exception e) {
             throw new BusinessException(e.getMessage());
@@ -82,15 +77,27 @@ public class MinioServiceImpl implements MinioService {
                             .build()
             );
 
-            return properties.getEndpoint()
-                    + "/"
-                    + properties.getBucketName()
-                    + "/"
-                    + objectName;
+            return publicUrl(objectName);
 
         } catch (Exception e) {
             throw new BusinessException("上传 RAG 文档失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 生成对象的外部访问地址：优先使用配置的公网域名（img.ajie-ai.xyz），
+     * 未配置时回退为内网 endpoint，保证本地/测试环境仍可用。
+     */
+    private String publicUrl(String objectName) {
+        String base = properties.getPublicBaseUrl();
+        if (base == null || base.isBlank()) {
+            base = properties.getEndpoint();
+        }
+        return stripTrailingSlash(base.trim()) + "/" + properties.getBucketName() + "/" + objectName;
+    }
+
+    private String stripTrailingSlash(String value) {
+        return value.endsWith("/") ? value.substring(0, value.length() - 1) : value;
     }
 
     @Override
@@ -104,6 +111,20 @@ public class MinioServiceImpl implements MinioService {
             );
         } catch (Exception e) {
             throw new BusinessException("读取 RAG 文档失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public InputStream readByUrl(String url) {
+        try {
+            return minioClient.getObject(
+                    GetObjectArgs.builder()
+                            .bucket(properties.getBucketName())
+                            .object(parseObjectName(url))
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new BusinessException("读取文件失败: " + e.getMessage());
         }
     }
 
@@ -158,13 +179,12 @@ public class MinioServiceImpl implements MinioService {
      * 如 http://192.168.127.128:9000/agriculture/uuid_abc.png → uuid_abc.png
      */
     private String parseObjectName(String imageUrl) {
-        String path = URI.create(imageUrl).getPath();   // /agriculture/uuid_abc.png
-        String prefix = "/" + properties.getBucketName() + "/images“"+"/";
+        String path = URI.create(imageUrl).getPath();
+        String prefix = "/" + properties.getBucketName() + "/";
         if (path.startsWith(prefix)) {
-            return path.substring(prefix.length());
+            return URLDecoder.decode(path.substring(prefix.length()), StandardCharsets.UTF_8);
         }
-        // 兼容只传了对象名的情况
-        return path.startsWith("/") ? path.substring(1) : path;
+        return URLDecoder.decode(path.startsWith("/") ? path.substring(1) : path, StandardCharsets.UTF_8);
     }
 
     /**

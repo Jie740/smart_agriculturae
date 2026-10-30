@@ -30,7 +30,7 @@ import static com.clj.common.constant.MaterialStockRecordConstants.OUTPUT;
 @RequiredArgsConstructor
 public class MaterialApplyServiceImpl extends ServiceImpl<MaterialApplyMapper, MaterialApply>
     implements MaterialApplyService{
-    final UserService userService;
+    final SysUserService sysUserService;
     final MaterialService materialService;
     final MaterialStockRecordService materialStockRecordService;
     final ContractorMaterialStockService contractorMaterialStockService;
@@ -57,14 +57,14 @@ public class MaterialApplyServiceImpl extends ServiceImpl<MaterialApplyMapper, M
         List<Material> materials = materialIds.isEmpty() ? new ArrayList<>() :
                 materialService.listByIds(materialIds);
         // 批量查询用户信息
-        List<User> users = applicantIds.isEmpty() ? new ArrayList<>() :
-                userService.listByIds(applicantIds);
+        List<SysUser> users = applicantIds.isEmpty() ? new ArrayList<>() :
+                sysUserService.listByIds(applicantIds);
 
         // 转换为 Map 方便快速查找
         java.util.Map<Long, String> materialNameMap = materials.stream()
                 .collect(Collectors.toMap(Material::getMaterialId, Material::getMaterialName, (k1, k2) -> k1));
-        java.util.Map<Long, User> userMap = users.stream()
-                .collect(Collectors.toMap(User::getUserId, u -> u, (k1, k2) -> k1));
+        java.util.Map<Long, SysUser> userMap = users.stream()
+                .collect(Collectors.toMap(SysUser::getId, u -> u, (k1, k2) -> k1));
         java.util.Map<Long, Long> materialTypeIdMap = materials.stream()
                 .collect(Collectors.toMap(Material::getMaterialId, Material::getTypeId, (k1, k2) -> k1));
 
@@ -96,8 +96,8 @@ public class MaterialApplyServiceImpl extends ServiceImpl<MaterialApplyMapper, M
 
             // 设置申请人信息
             if (record.getApplicantId() != null && userMap.containsKey(record.getApplicantId())) {
-                User user = userMap.get(record.getApplicantId());
-                materialApplyVo.setApplicant(user.getName());
+                SysUser user = userMap.get(record.getApplicantId());
+                materialApplyVo.setApplicant(user.getNickname());
                 materialApplyVo.setPhone(user.getPhone());
             }
 
@@ -111,15 +111,16 @@ public class MaterialApplyServiceImpl extends ServiceImpl<MaterialApplyMapper, M
 
     @Override
     public void add(MaterialApplyDto materialApplyDto) {
-        User one = userService.lambdaQuery().eq(User::getPhone, materialApplyDto.getPhone())
-                .eq(User::getName, materialApplyDto.getApplicant())
+        SysUser one = sysUserService.lambdaQuery().eq(SysUser::getPhone, materialApplyDto.getPhone())
+                .eq(SysUser::getNickname, materialApplyDto.getApplicant())
+                .eq(SysUser::getDeleted, 0)
                 .one();
         if (one == null){
             throw new BusinessException("用户不存在");
         }
 
         MaterialApply materialApply = new MaterialApply();
-        materialApply.setApplicantId(one.getUserId());
+        materialApply.setApplicantId(one.getId());
         BeanUtils.copyProperties(materialApplyDto,materialApply);
 
         if (!this.save(materialApply)) {
@@ -143,11 +144,12 @@ public class MaterialApplyServiceImpl extends ServiceImpl<MaterialApplyMapper, M
                 .collect(Collectors.toSet());
 
         //根据 keyword 查询用户 ID 列表（模糊匹配姓名或手机号）
-        List<User> users = userService.lambdaQuery()
-                .like(User::getName, keyword)
+        List<SysUser> users = sysUserService.lambdaQuery()
+                .eq(SysUser::getDeleted, 0)
+                .like(SysUser::getNickname, keyword)
                 .list();
         Set<Long> userIds = users.stream()
-                .map(User::getUserId)
+                .map(SysUser::getId)
                 .collect(Collectors.toSet());
 
         //根据农资 ID 和用户 ID 分页查询 material_apply
@@ -169,9 +171,23 @@ public class MaterialApplyServiceImpl extends ServiceImpl<MaterialApplyMapper, M
 
     @Override
     public void delete(Long applyId) {
+        MaterialApply apply = this.getById(applyId);
+        if (apply == null) {
+            throw new BusinessException("申请不存在");
+        }
+        if (!isAdministrator() && !SecurityUtil.getUserId().equals(apply.getApplicantId())) {
+            throw new BusinessException("无权操作该申请");
+        }
         if (!this.removeById(applyId)) {
             throw new BusinessException("删除失败");
         }
+    }
+
+    private boolean isAdministrator() {
+        return SecurityUtil.getLoginUser().getAuthorities().stream()
+                .map(authority -> authority.getAuthority())
+                .anyMatch(authority -> "ROLE_SYSTEM_ADMIN".equals(authority)
+                        || "ROLE_ENTERPRISE_ADMIN".equals(authority));
     }
 
     @Override
@@ -257,22 +273,25 @@ public class MaterialApplyServiceImpl extends ServiceImpl<MaterialApplyMapper, M
             }
         }
 
-        User user = userService.lambdaQuery().eq(User::getUserId, one.getApplicantId())
+        SysUser user = sysUserService.lambdaQuery()
+                .eq(SysUser::getId, one.getApplicantId())
+                .eq(SysUser::getDeleted, 0)
                 .one();
-        vo.setApplicant(user.getName());
+        vo.setApplicant(user.getNickname());
         vo.setPhone(user.getPhone());
         return vo;
     }
 
     @Override
     public void updateApply(MaterialApplyDto materialApplyDto) {
-        User one = userService.lambdaQuery().eq(User::getName, materialApplyDto.getApplicant())
-                .eq(User::getPhone, materialApplyDto.getPhone())
+        SysUser one = sysUserService.lambdaQuery().eq(SysUser::getNickname, materialApplyDto.getApplicant())
+                .eq(SysUser::getPhone, materialApplyDto.getPhone())
+                .eq(SysUser::getDeleted, 0)
                 .one();
         if (one==null){
             throw new BusinessException("用户不存在");
         }
-        Long userId = one.getUserId();
+        Long userId = one.getId();
         MaterialApply materialApply = new MaterialApply();
         BeanUtils.copyProperties(materialApplyDto, materialApply);
         materialApply.setApplicantId(userId);
@@ -310,15 +329,15 @@ public class MaterialApplyServiceImpl extends ServiceImpl<MaterialApplyMapper, M
 
         if (!applicantIds.isEmpty()) {
             // 批量查询用户信息
-            List<User> users = userService.listByIds(applicantIds);
-            java.util.Map<Long, User> userMap = users.stream()
-                    .collect(Collectors.toMap(User::getUserId, u -> u, (k1, k2) -> k1));
+            List<SysUser> users = sysUserService.listByIds(applicantIds);
+            java.util.Map<Long, SysUser> userMap = users.stream()
+                    .collect(Collectors.toMap(SysUser::getId, u -> u, (k1, k2) -> k1));
 
             // 填充用户信息
             for (MaterialApplyVo vo : vos) {
                 if (vo.getApplicantId() != null && userMap.containsKey(vo.getApplicantId())) {
-                    User user = userMap.get(vo.getApplicantId());
-                    vo.setApplicant(user.getName());
+                    SysUser user = userMap.get(vo.getApplicantId());
+                    vo.setApplicant(user.getNickname());
                     vo.setPhone(user.getPhone());
                 }
             }
@@ -417,7 +436,5 @@ public class MaterialApplyServiceImpl extends ServiceImpl<MaterialApplyMapper, M
         return voPage;
     }
 }
-
-
 
 

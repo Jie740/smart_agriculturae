@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class MaterialApplyController {
     final MaterialApplyService materialApplyService;
     @PostMapping("/add")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
     public Result<Void> add(@RequestBody MaterialApplyDto materialApplyDto){
         materialApplyService.add(materialApplyDto);
         return Result.success();
@@ -36,7 +36,7 @@ public class MaterialApplyController {
     }
 
     @DeleteMapping("/delete/{applyId}")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
     public Result<Void> delete(@PathVariable("applyId") Long applyId){
         materialApplyService.delete(applyId);
         return Result.success();
@@ -50,7 +50,7 @@ public class MaterialApplyController {
         return Result.success();
     }
     @GetMapping("/getMaterialApplyById/{applyId}")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
     public Result<MaterialApplyVo> getById(@PathVariable("applyId") Long applyId){
         return Result.success(materialApplyService.getMaterialApplyVoById(applyId));
     }
@@ -64,7 +64,7 @@ public class MaterialApplyController {
 
     // 根据用户ID分页查询我的农资申请
     @GetMapping("/getMyApplies/{pageNum}/{pageSize}")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','ENTERPRISE_ADMIN','USER')")
     public Result<Page<MaterialApplyVo>> getMyApplies(
             @RequestParam(value = "keyword", required = false) String keyword,
             @PathVariable("pageNum") Integer pageNum,

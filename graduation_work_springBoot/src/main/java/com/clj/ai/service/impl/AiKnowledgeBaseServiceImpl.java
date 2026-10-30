@@ -4,16 +4,25 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.clj.ai.domain.AiKnowledgeBase;
+import com.clj.ai.domain.AiKnowledgeBaseType;
+import com.clj.ai.domain.AiRagChunk;
+import com.clj.ai.domain.AiRagDocument;
 import com.clj.ai.dto.AiKnowledgeBaseDto;
+import com.clj.ai.mapper.AiRagChunkMapper;
+import com.clj.ai.mapper.AiRagDocumentMapper;
+import com.clj.ai.mapper.AiRagRetrievalMapper;
 import com.clj.ai.service.AiKnowledgeBaseService;
+import com.clj.ai.service.AiKnowledgeBaseTypeService;
 import com.clj.ai.mapper.AiKnowledgeBaseMapper;
 import com.clj.common.exception.BusinessException;
 import com.clj.security.util.SecurityUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Date;
+import java.util.List;
 
 /**
 * @author ajie
@@ -21,8 +30,14 @@ import java.util.Date;
 * @createDate 2026-08-18 18:05:50
 */
 @Service
+@RequiredArgsConstructor
 public class AiKnowledgeBaseServiceImpl extends ServiceImpl<AiKnowledgeBaseMapper, AiKnowledgeBase>
     implements AiKnowledgeBaseService{
+
+    private final AiKnowledgeBaseTypeService typeService;
+    private final AiRagDocumentMapper documentMapper;
+    private final AiRagChunkMapper chunkMapper;
+    private final AiRagRetrievalMapper retrievalMapper;
 
     @Override
     public void add(AiKnowledgeBaseDto knowledgeBaseDto) {
@@ -36,6 +51,7 @@ public class AiKnowledgeBaseServiceImpl extends ServiceImpl<AiKnowledgeBaseMappe
         AiKnowledgeBase knowledgeBase = new AiKnowledgeBase();
         knowledgeBase.setName(knowledgeBaseDto.getName());
         knowledgeBase.setDescription(knowledgeBaseDto.getDescription());
+        knowledgeBase.setTypeId(knowledgeBaseDto.getTypeId());
         knowledgeBase.setStatus(knowledgeBaseDto.getStatus() != null ? knowledgeBaseDto.getStatus() : 1);
         knowledgeBase.setDocumentCount(0);
         knowledgeBase.setIsDeleted(false);
@@ -62,8 +78,31 @@ public class AiKnowledgeBaseServiceImpl extends ServiceImpl<AiKnowledgeBaseMappe
         updateWrapper.eq(AiKnowledgeBase::getId, id)
                 .set(AiKnowledgeBase::getIsDeleted, true)
                 .set(AiKnowledgeBase::getDeletedAt, now)
-                .set(AiKnowledgeBase::getDeletedBy, userId);
+                .set(AiKnowledgeBase::getDeletedBy, userId)
+                .set(AiKnowledgeBase::getDocumentCount, 0);
         this.update(updateWrapper);
+
+        List<AiRagDocument> documents = documentMapper.selectList(
+                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<AiRagDocument>()
+                        .eq("knowledge_base_id", id)
+                        .eq("is_deleted", false));
+        for (AiRagDocument document : documents) {
+            LambdaUpdateWrapper<AiRagDocument> documentUpdate = new LambdaUpdateWrapper<>();
+            documentUpdate.eq(AiRagDocument::getId, document.getId())
+                    .set(AiRagDocument::getIsDeleted, true)
+                    .set(AiRagDocument::getDeletedAt, now)
+                    .set(AiRagDocument::getDeletedBy, userId);
+            documentMapper.update(null, documentUpdate);
+
+            LambdaUpdateWrapper<AiRagChunk> chunkUpdate = new LambdaUpdateWrapper<>();
+            chunkUpdate.eq(AiRagChunk::getDocumentId, document.getId())
+                    .set(AiRagChunk::getIsDeleted, true)
+                    .set(AiRagChunk::getIsActive, false)
+                    .set(AiRagChunk::getDeletedAt, now)
+                    .set(AiRagChunk::getDeletedBy, userId);
+            chunkMapper.update(null, chunkUpdate);
+            retrievalMapper.deleteByDocumentId(document.getId());
+        }
     }
 
     @Override
@@ -101,12 +140,24 @@ public class AiKnowledgeBaseServiceImpl extends ServiceImpl<AiKnowledgeBaseMappe
     }
 
     @Override
-    public Page<AiKnowledgeBase> getKnowledgeBasesByPage(String keyword, Integer pageNum, Integer pageSize) {
+    public Page<AiKnowledgeBase> getKnowledgeBasesByPage(String keyword, Long typeId, Integer pageNum, Integer pageSize) {
         Page<AiKnowledgeBase> page = new Page<>(pageNum, pageSize);
-        return this.lambdaQuery()
+        Page<AiKnowledgeBase> result = this.lambdaQuery()
                 .eq(AiKnowledgeBase::getIsDeleted, false)
+                .eq(typeId != null, AiKnowledgeBase::getTypeId, typeId)
                 .like(StringUtils.hasText(keyword), AiKnowledgeBase::getName, keyword)
                 .orderByDesc(AiKnowledgeBase::getCrtim)
                 .page(page);
+        if (!result.getRecords().isEmpty()) {
+            var types = typeService.listByIds(result.getRecords().stream()
+                    .map(AiKnowledgeBase::getTypeId)
+                    .filter(java.util.Objects::nonNull)
+                    .distinct()
+                    .toList());
+            var typeMap = types.stream().collect(java.util.stream.Collectors.toMap(
+                    AiKnowledgeBaseType::getId, AiKnowledgeBaseType::getTypeName));
+            result.getRecords().forEach(item -> item.setTypeName(typeMap.get(item.getTypeId())));
+        }
+        return result;
     }
 }

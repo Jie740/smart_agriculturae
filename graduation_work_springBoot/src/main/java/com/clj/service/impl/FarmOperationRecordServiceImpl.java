@@ -8,7 +8,7 @@ import com.clj.domain.FarmOperationRecord;
 import com.clj.domain.Material;
 import com.clj.domain.MatureCrop;
 import com.clj.domain.PlantingRecord;
-import com.clj.domain.User;
+import com.clj.domain.SysUser;
 import com.clj.domain.dto.FarmOperationDto;
 import com.clj.domain.vo.FarmOperationRecordVo;
 import com.clj.service.ContractorMaterialStockService;
@@ -18,7 +18,7 @@ import com.clj.service.MaterialService;
 import com.clj.service.MatureCropService;
 import com.clj.service.PlantingPlanService;
 import com.clj.service.PlantingRecordService;
-import com.clj.service.UserService;
+import com.clj.service.SysUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -43,7 +43,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FarmOperationRecordServiceImpl extends ServiceImpl<FarmOperationRecordMapper, FarmOperationRecord>
     implements FarmOperationRecordService{
-    final UserService userService;
+    final SysUserService sysUserService;
     final MaterialService materialService;
     final ContractorMaterialStockService contractorMaterialStockService;
     final MatureCropService matureCropService;
@@ -52,13 +52,14 @@ public class FarmOperationRecordServiceImpl extends ServiceImpl<FarmOperationRec
     @Override
     @Transactional
     public void add(FarmOperationDto farmOperationDto) {
-        User one = this.userService.lambdaQuery().eq(User::getPhone, farmOperationDto.getPhone())
-                .eq(User::getName, farmOperationDto.getOperatorName())
+        SysUser one = this.sysUserService.lambdaQuery().eq(SysUser::getPhone, farmOperationDto.getPhone())
+                .eq(SysUser::getNickname, farmOperationDto.getOperatorName())
+                .eq(SysUser::getDeleted, 0)
                 .one();
         if (one == null){
             throw new BusinessException("用户不存在");
         }
-        Long userId = one.getUserId();
+        Long userId = one.getId();
         FarmOperationRecord record = new FarmOperationRecord();
         BeanUtils.copyProperties(farmOperationDto, record);
         record.setUserId(userId);
@@ -215,9 +216,9 @@ public class FarmOperationRecordServiceImpl extends ServiceImpl<FarmOperationRec
         }
 
         // 批量查询用户信息
-        ArrayList<User> users = new ArrayList<>();
+        ArrayList<SysUser> users = new ArrayList<>();
         if (!userIds.isEmpty()) {
-            users = (ArrayList<User>) userService.listByIds(userIds);
+            users = (ArrayList<SysUser>) sysUserService.listByIds(userIds);
         }
 
         // 批量查询农资信息
@@ -227,8 +228,8 @@ public class FarmOperationRecordServiceImpl extends ServiceImpl<FarmOperationRec
         }
 
         // 转换为 Map 便于快速查找
-        java.util.Map<Long, User> userMap = users.stream()
-                .collect(java.util.stream.Collectors.toMap(User::getUserId, user -> user));
+        java.util.Map<Long, SysUser> userMap = users.stream()
+                .collect(java.util.stream.Collectors.toMap(SysUser::getId, user -> user));
         java.util.Map<Long, Material> materialMap = materials.stream()
                 .collect(java.util.stream.Collectors.toMap(Material::getMaterialId, material -> material));
 
@@ -239,9 +240,9 @@ public class FarmOperationRecordServiceImpl extends ServiceImpl<FarmOperationRec
             BeanUtils.copyProperties(record, farmOperationRecordVo);
 
             // 从 Map 中获取用户信息
-            User user = userMap.get(record.getUserId());
+            SysUser user = userMap.get(record.getUserId());
             if (user != null) {
-                farmOperationRecordVo.setOperatorName(user.getName());
+                farmOperationRecordVo.setOperatorName(user.getNickname());
                 farmOperationRecordVo.setPhone(user.getPhone());
             }
 
@@ -270,13 +271,14 @@ public class FarmOperationRecordServiceImpl extends ServiceImpl<FarmOperationRec
         }
 
         // 查询用户是否存在
-        User one = this.userService.lambdaQuery().eq(User::getPhone, farmOperationDto.getPhone())
-                .eq(User::getName, farmOperationDto.getOperatorName())
+        SysUser one = this.sysUserService.lambdaQuery().eq(SysUser::getPhone, farmOperationDto.getPhone())
+                .eq(SysUser::getNickname, farmOperationDto.getOperatorName())
+                .eq(SysUser::getDeleted, 0)
                 .one();
         if (one == null){
             throw new BusinessException("用户不存在");
         }
-        Long userId = one.getUserId();
+        Long userId = one.getId();
 
         FarmOperationRecord record = new FarmOperationRecord();
         BeanUtils.copyProperties(farmOperationDto, record);

@@ -10,7 +10,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity com.clj.ai.domain.AiRagRetrieval
 */
 public interface AiRagRetrievalMapper extends BaseMapper<AiRagRetrieval> {
-
+    int deleteByDocumentId(@org.apache.ibatis.annotations.Param("documentId") Long documentId);
 }
 
 

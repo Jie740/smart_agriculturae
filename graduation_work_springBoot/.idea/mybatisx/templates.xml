@@ -69,8 +69,8 @@
             <option name="tableUIInfoList">
               <list>
                 <TableUIInfo>
-                  <option name="className" value="AiRagRetrieval" />
-                  <option name="tableName" value="ai_rag_retrieval" />
+                  <option name="className" value="AiKnowledgeBaseType" />
+                  <option name="tableName" value="ai_knowledge_base_type" />
                 </TableUIInfo>
               </list>
             </option>

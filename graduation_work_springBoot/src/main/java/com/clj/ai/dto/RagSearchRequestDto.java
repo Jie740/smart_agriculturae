@@ -21,6 +21,11 @@ public class RagSearchRequestDto {
     private List<Long> knowledgeBaseIds;
 
     /**
+     * 文档级过滤。非空时优先于知识库过滤。
+     */
+    private List<Long> documentIds;
+
+    /**
      * 查询文本
      */
     private String query;

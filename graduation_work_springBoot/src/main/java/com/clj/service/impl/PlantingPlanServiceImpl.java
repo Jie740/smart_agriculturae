@@ -4,20 +4,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.clj.common.constant.PlantingPlanConstants;
 import com.clj.common.exception.BusinessException;
-import com.clj.domain.Crop;
-import com.clj.domain.Land;
-import com.clj.domain.LandAllocation;
-import com.clj.domain.PlantingPlan;
-import com.clj.domain.User;
+import com.clj.domain.*;
 import com.clj.domain.dto.PlantingPlanDto;
 import com.clj.domain.vo.PlantingPlanVo;
 import com.clj.mapper.PlantingPlanMapper;
 import com.clj.security.util.SecurityUtil;
-import com.clj.service.CropService;
-import com.clj.service.LandAllocationService;
-import com.clj.service.LandService;
-import com.clj.service.PlantingPlanService;
-import com.clj.service.UserService;
+import com.clj.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -39,7 +31,7 @@ import java.util.stream.Collectors;
 public class PlantingPlanServiceImpl extends ServiceImpl<PlantingPlanMapper, PlantingPlan>
     implements PlantingPlanService{
 
-    final UserService userService;
+    final SysUserService userService;
     final LandService landService;
     final CropService cropService;
     final LandAllocationService landAllocationService;
@@ -51,10 +43,10 @@ public class PlantingPlanServiceImpl extends ServiceImpl<PlantingPlanMapper, Pla
         if (userId== null){
             throw new BusinessException("请先登录");
         }
-        User user = userService.getById(userId);
-        if (user == null || (!"ENTERPRISE_ADMIN".equals(user.getRole()) && !"SYSTEM_ADMIN".equals(user.getRole()))){
-            throw new BusinessException("无权限");
-        }
+        SysUser user = userService.getById(userId);
+//        if (user == null || (!"ENTERPRISE_ADMIN".equals(user.getRole()) && !"SYSTEM_ADMIN".equals(user.getRole()))){
+//            throw new BusinessException("无权限");
+//        }
         //查询计划名是否存在
         PlantingPlan plantingPlan1 = this.lambdaQuery().eq(PlantingPlan::getPlanName, plantingPlanDto.getPlanName())
                 .one();
@@ -162,9 +154,9 @@ public class PlantingPlanServiceImpl extends ServiceImpl<PlantingPlanMapper, Pla
 
             // 根据 creatorId 查询创建人信息
             if (plantingPlan.getCreatorId() != null) {
-                User user = userService.getById(plantingPlan.getCreatorId());
+                SysUser user = userService.getById(plantingPlan.getCreatorId());
                 if (user != null) {
-                    vo.setCreator(user.getName());
+                    vo.setCreator(user.getNickname());
                 }
             }
 
@@ -216,9 +208,9 @@ public class PlantingPlanServiceImpl extends ServiceImpl<PlantingPlanMapper, Pla
 
             // 根据 creatorId 查询创建人信息
             if (plantingPlan.getCreatorId() != null) {
-                User user = userService.getById(plantingPlan.getCreatorId());
+                SysUser user = userService.getById(plantingPlan.getCreatorId());
                 if (user != null) {
-                    vo.setCreator(user.getName());
+                    vo.setCreator(user.getNickname());
                 }
             }
 
@@ -289,9 +281,9 @@ public class PlantingPlanServiceImpl extends ServiceImpl<PlantingPlanMapper, Pla
 
         // 根据 creatorId 查询创建人信息
         if (plantingPlan.getCreatorId() != null) {
-            User user = userService.getById(plantingPlan.getCreatorId());
+            SysUser user = userService.getById(plantingPlan.getCreatorId());
             if (user != null) {
-                vo.setCreator(user.getName());
+                vo.setCreator(user.getNickname());
             }
         }
         return vo;
@@ -326,9 +318,9 @@ public class PlantingPlanServiceImpl extends ServiceImpl<PlantingPlanMapper, Pla
 
             // 根据 creatorId 查询创建人信息
             if (plantingPlan.getCreatorId() != null) {
-                User user = userService.getById(plantingPlan.getCreatorId());
+                SysUser user = userService.getById(plantingPlan.getCreatorId());
                 if (user != null) {
-                    vo.setCreator(user.getName());
+                    vo.setCreator(user.getNickname());
                 }
             }
 
@@ -407,9 +399,9 @@ public class PlantingPlanServiceImpl extends ServiceImpl<PlantingPlanMapper, Pla
 
             // 根据 creatorId 查询创建人信息
             if (plantingPlan.getCreatorId() != null) {
-                User user = userService.getById(plantingPlan.getCreatorId());
+                SysUser user = userService.getById(plantingPlan.getCreatorId());
                 if (user != null) {
-                    vo.setCreator(user.getName());
+                    vo.setCreator(user.getNickname());
                 }
             }
 
@@ -479,9 +471,9 @@ public class PlantingPlanServiceImpl extends ServiceImpl<PlantingPlanMapper, Pla
 
             // 根据 creatorId 查询创建人信息
             if (plantingPlan.getCreatorId() != null) {
-                User user = userService.getById(plantingPlan.getCreatorId());
+                SysUser user = userService.getById(plantingPlan.getCreatorId());
                 if (user != null) {
-                    vo.setCreator(user.getName());
+                    vo.setCreator(user.getNickname());
                 }
             }
 
@@ -495,10 +487,10 @@ public class PlantingPlanServiceImpl extends ServiceImpl<PlantingPlanMapper, Pla
         PlantingPlan plantingPlan = this.lambdaQuery().eq(PlantingPlan::getPlanId, planId)
                 .one();
         Long creatorId = plantingPlan.getCreatorId();
-        User user = userService.lambdaQuery().eq(User::getUserId, creatorId)
+        SysUser user = userService.lambdaQuery().eq(SysUser::getId, creatorId)
                 .one();
         HashMap<String, String> map = new HashMap<>();
-        map.put("creator", user.getName());
+        map.put("creator", user.getNickname());
         return map;
     }
 }

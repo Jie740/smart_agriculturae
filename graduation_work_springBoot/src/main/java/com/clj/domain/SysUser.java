@@ -90,6 +90,12 @@ public class SysUser {
      */
     private String remark;
 
+    /**
+     * 角色编码（RBAC，来自 sys_user_role 关联查询，非表字段）
+     */
+    @TableField(exist = false)
+    private String roleCode;
+
     @Override
     public boolean equals(Object that) {
         if (this == that) {

@@ -27,6 +27,9 @@ public class AiRagSearchController {
      */
     @PostMapping("/search")
     public Result<List<RagSearchResultVo>> search(@RequestBody RagSearchRequestDto request) {
+        if (request == null || request.getQuery() == null || request.getQuery().isBlank()) {
+            throw new IllegalArgumentException("检索内容不能为空");
+        }
         List<RagSearchResultVo> results = searchService.search(request);
         return Result.success(results);
     }

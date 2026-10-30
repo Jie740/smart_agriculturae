@@ -1,5 +1,7 @@
 package com.clj.ai.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,8 +17,9 @@ import lombok.NoArgsConstructor;
 public class DocumentUploadResultVo {
 
     /**
-     * 文档ID
+     * 文档ID（雪花 ID，序列化为字符串避免前端精度丢失）
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long documentId;
 
     /**

@@ -8,9 +8,12 @@
             <id property="id" column="id" />
             <result property="conversationId" column="conversation_id" />
             <result property="role" column="role" />
-            <result property="contentJson" column="content_json" />
-            <result property="traceJson" column="trace_json" />
-            <result property="attributes" column="attributes" />
+            <result property="contentJson" column="content_json"
+                    typeHandler="com.clj.ai.config.JsonbTypeHandler" />
+            <result property="traceJson" column="trace_json"
+                    typeHandler="com.clj.ai.config.JsonbTypeHandler" />
+            <result property="attributes" column="attributes"
+                    typeHandler="com.clj.ai.config.JsonbTypeHandler" />
             <result property="isDeleted" column="is_deleted" />
             <result property="createdBy" column="created_by" />
             <result property="createdTime" column="created_time" />

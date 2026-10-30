@@ -19,10 +19,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-/**
- * RAG 向量检索服务实现
- * 基于 ai_rag_chunk 表的 pgvector 余弦相似度检索
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -34,33 +30,36 @@ public class AiRagSearchServiceImpl implements AiRagSearchService {
 
     @Override
     public List<RagSearchResultVo> search(RagSearchRequestDto request) {
-        // 合并单库与多库参数
+        if (request == null || request.getQuery() == null || request.getQuery().isBlank()) {
+            return List.of();
+        }
+
+        int topK = request.getTopK() == null || request.getTopK() <= 0
+                ? 5
+                : Math.min(request.getTopK(), 50);
+        double minScore = request.getMinScore() == null ? 0.65 : request.getMinScore();
         List<Long> knowledgeBaseIds = resolveKnowledgeBaseIds(request);
+        List<Long> documentIds = normalizeIds(request.getDocumentIds());
 
-        log.info("开始向量检索: knowledgeBaseIds={}, query={}, topK={}, minScore={}",
-                knowledgeBaseIds, request.getQuery(), request.getTopK(), request.getMinScore());
+        // 检索范围必须由调用方显式指定：用户未勾选任何知识库/文档时不检索全库，直接返回空结果
+        if (knowledgeBaseIds.isEmpty() && documentIds.isEmpty()) {
+            log.warn("RAG 检索未指定知识库或文档范围，按“未勾选不检索”策略返回空结果: query={}", request.getQuery());
+            return List.of();
+        }
 
-        // 1. 将查询文本向量化
         Embedding queryEmbedding = embeddingModel.embed(request.getQuery()).content();
-
-        // 2. 基于 pgvector 余弦相似度检索 ai_rag_chunk
         List<ChunkSimilarityDto> similarChunks = chunkMapper.searchSimilar(
                 new PGvector(queryEmbedding.vector()),
-                request.getTopK(),
-                knowledgeBaseIds);
+                topK,
+                knowledgeBaseIds,
+                documentIds);
 
-        log.info("检索个数: {}", similarChunks.size());
-        for (ChunkSimilarityDto chunk : similarChunks){
-            log.info("检索结果: 知识库名称={}，相似度={}", chunk.getKnowledgeBaseName(), chunk.getSimilarity());
-        }
-        // 3. 转换结果并按最小相似度过滤
         List<RagSearchResultVo> results = new ArrayList<>();
         for (ChunkSimilarityDto chunk : similarChunks) {
-            if (chunk.getSimilarity() == null || chunk.getSimilarity() < request.getMinScore()) {
+            if (chunk.getSimilarity() == null || chunk.getSimilarity() < minScore) {
                 continue;
             }
-
-            RagSearchResultVo result = RagSearchResultVo.builder()
+            results.add(RagSearchResultVo.builder()
                     .documentId(chunk.getDocumentId())
                     .chunkId(chunk.getId())
                     .content(chunk.getContent())
@@ -68,21 +67,18 @@ public class AiRagSearchServiceImpl implements AiRagSearchService {
                     .knowledgeBaseName(chunk.getKnowledgeBaseName())
                     .score(chunk.getSimilarity())
                     .metadata(parseMetadata(chunk.getMetadata()))
-                    .build();
-
-            results.add(result);
+                    .build());
         }
-        log.info("转换结果: {}", results.toString());
-
-        log.info("向量检索完成: 找到 {} 个结果", results.size());
         return results;
     }
 
-    /**
-     * 合并 knowledgeBaseId（单库）与 knowledgeBaseIds（多库）参数
-     *
-     * @return 去重后的知识库ID列表；为空表示不限定知识库
-     */
+    private List<Long> normalizeIds(List<Long> ids) {
+        if (ids == null) {
+            return List.of();
+        }
+        return ids.stream().filter(Objects::nonNull).distinct().toList();
+    }
+
     private List<Long> resolveKnowledgeBaseIds(RagSearchRequestDto request) {
         List<Long> ids = new ArrayList<>();
         if (request.getKnowledgeBaseIds() != null) {
@@ -94,9 +90,6 @@ public class AiRagSearchServiceImpl implements AiRagSearchService {
         return ids.stream().filter(Objects::nonNull).distinct().collect(Collectors.toList());
     }
 
-    /**
-     * 解析 metadata JSON 字符串为 Map
-     */
     private Map<String, Object> parseMetadata(String metadata) {
         if (metadata == null || metadata.isBlank()) {
             return Map.of();
@@ -104,7 +97,7 @@ public class AiRagSearchServiceImpl implements AiRagSearchService {
         try {
             return objectMapper.readValue(metadata, Map.class);
         } catch (Exception e) {
-            log.warn("解析 metadata 失败: {}", e.getMessage());
+            log.warn("Failed to parse RAG metadata: {}", e.getMessage());
             return Map.of();
         }
     }

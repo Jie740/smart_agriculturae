@@ -16,6 +16,11 @@ public class ChatRequestDto {
     private Long conversationId;
 
     /**
+     * 编辑用户消息后重新生成时，替换的原消息ID。
+     */
+    private Long replaceMessageId;
+
+    /**
      * 用户输入文本
      */
     private String text;
@@ -25,7 +30,11 @@ public class ChatRequestDto {
      */
     private List<String> imageUrls;
 
-    /**
-     * 其他参数（可选）
-     */
+    private List<ChatAttachmentDto> attachments;
+
+    private List<Long> knowledgeBaseIds;
+
+    private List<Long> documentIds;
+
+    private String ragScopeKey;
 }

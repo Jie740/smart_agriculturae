@@ -11,7 +11,7 @@
     <div class="search-bar">
       <el-input
         v-model="searchQuery"
-        placeholder="输入姓名"
+        placeholder="输入姓名/用户名/手机号"
         style="width: 300px"
         clearable
         @clear="handleReset"
@@ -37,17 +37,16 @@
         v-loading="loading"
         height="100%"
       >
-        <el-table-column prop="userId" label="用户ID" width="120" align="center" />
+        <el-table-column prop="id" label="用户ID" width="120" align="center" />
         <el-table-column prop="username" label="用户名" width="120" align="center" />
-        <el-table-column prop="name" label="姓名" width="120" align="center" />
-        <el-table-column prop="role" label="用户角色" width="120" align="center">
+        <el-table-column prop="nickname" label="姓名" width="120" align="center" />
+        <el-table-column prop="roleCode" label="用户角色" width="120" align="center">
           <template #default="scope">
-            <span :class="roleClass(scope.row.role)">
-              {{ roleText(scope.row.role) }}
+            <span :class="roleClass(scope.row.roleCode)">
+              {{ roleText(scope.row.roleCode) }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="password" label="密码" width="120" align="center" />
         <el-table-column prop="phone" label="手机号" width="120" align="center">
           <template #default="scope">
             {{ scope.row.phone || '未设置' }}
@@ -102,23 +101,27 @@
     <!-- 添加/编辑用户对话框 -->
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px">
-        <el-form-item label="用户ID" v-if="formData.userId">
-          <el-input v-model="formData.userId" disabled />
+        <el-form-item label="用户ID" v-if="formData.id">
+          <el-input v-model="formData.id" disabled />
         </el-form-item>
         <el-form-item label="用户名" prop="username">
           <el-input v-model="formData.username" placeholder="请输入用户名" />
         </el-form-item>
         <el-form-item label="密码" prop="password">
-          <el-input v-model="formData.password" type="text" placeholder="请输入密码" />
+          <el-input
+            v-model="formData.password"
+            type="text"
+            :placeholder="formData.id ? '留空表示不修改密码' : '请输入密码'"
+          />
         </el-form-item>
-        <el-form-item label="姓名" prop="name">
-          <el-input v-model="formData.name" placeholder="请输入姓名" />
+        <el-form-item label="姓名" prop="nickname">
+          <el-input v-model="formData.nickname" placeholder="请输入姓名" />
         </el-form-item>
-        <el-form-item label="用户角色" prop="role">
-          <el-select v-model="formData.role" placeholder="请选择角色">
-            <el-option label="系统管理员" value="system_admin" />
-            <el-option label="企业管理员" value="enterprise_admin" />
-            <el-option label="承包人" value="user" />
+        <el-form-item label="用户角色" prop="roleCode">
+          <el-select v-model="formData.roleCode" placeholder="请选择角色">
+            <el-option label="系统管理员" value="SYSTEM_ADMIN" />
+            <el-option label="企业管理员" value="ENTERPRISE_ADMIN" />
+            <el-option label="承包人" value="USER" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
@@ -181,18 +184,30 @@ const formRef = ref(null)
 // 表单验证规则
 const formRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-  name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-  role: [{ required: true, message: '请选择角色', trigger: 'change' }],
+  password: [
+    {
+      validator: (rule, value, callback) => {
+        // 新增时密码必填，编辑时留空表示不修改
+        if (!formData.value.id && !value) {
+          callback(new Error('请输入密码'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur',
+    },
+  ],
+  nickname: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+  roleCode: [{ required: true, message: '请选择角色', trigger: 'change' }],
 }
 
 // 表单数据
 const formData = ref({
-  userId: '',
+  id: '',
   username: '',
   password: '',
-  name: '',
-  role: '',
+  nickname: '',
+  roleCode: '',
   status: '1',
   phone: '',
   email: '',
@@ -234,11 +249,11 @@ const loadUsers = async () => {
 const openAddDialog = () => {
   dialogTitle.value = '添加用户'
   formData.value = {
-    userId: '',
+    id: '',
     username: '',
     password: '',
-    name: '',
-    role: '',
+    nickname: '',
+    roleCode: '',
     status: '1',
     phone: '',
     email: '',
@@ -254,9 +269,16 @@ const openAddDialog = () => {
 const openEditDialog = (user) => {
   dialogTitle.value = '编辑用户'
   formData.value = {
-    ...user,
+    id: user.id,
+    username: user.username,
+    // 编辑时密码留空表示不修改
+    password: '',
+    nickname: user.nickname,
+    roleCode: user.roleCode || '',
     // 确保状态值为字符串，与下拉框选项匹配
-    status: user.status.toString(),
+    status: user.status != null ? user.status.toString() : '1',
+    phone: user.phone,
+    email: user.email,
   }
   dialogVisible.value = true
   // 清除表单验证状态
@@ -279,11 +301,17 @@ const saveUser = async () => {
     if (valid) {
       try {
         const userData = {
-          ...formData.value,
+          id: formData.value.id,
+          username: formData.value.username,
+          password: formData.value.password,
+          nickname: formData.value.nickname,
+          phone: formData.value.phone,
+          email: formData.value.email,
+          roleCode: formData.value.roleCode,
           // 将状态转换为数字
           status: Number(formData.value.status),
         }
-        if (formData.value.userId) {
+        if (formData.value.id) {
           // 编辑现有用户
           // 调用后端API更新用户
           await $API.updateUser(userData)
@@ -319,7 +347,7 @@ const saveUser = async () => {
 const deleteUser = async () => {
   try {
     // 调用后端API删除用户
-    await $API.deleteUser(deleteUserInfo.value.userId)
+    await $API.deleteUser(deleteUserInfo.value.id)
     // 重新加载用户列表
     await loadUsers()
     deleteDialogVisible.value = false
@@ -365,9 +393,9 @@ const handleCurrentChange = (current) => {
 // 角色文本映射
 const roleText = (role) => {
   const roleMap = {
-    system_admin: '系统管理员',
-    enterprise_admin: '企业管理员',
-    user: '承包人',
+    SYSTEM_ADMIN: '系统管理员',
+    ENTERPRISE_ADMIN: '企业管理员',
+    USER: '承包人',
   }
   return roleMap[role] || role
 }
@@ -375,9 +403,9 @@ const roleText = (role) => {
 // 角色样式映射
 const roleClass = (role) => {
   const classMap = {
-    system_admin: 'role-system-admin',
-    enterprise_admin: 'role-enterprise-admin',
-    user: 'role-user',
+    SYSTEM_ADMIN: 'role-system-admin',
+    ENTERPRISE_ADMIN: 'role-enterprise-admin',
+    USER: 'role-user',
   }
   return classMap[role] || ''
 }
@@ -397,7 +425,7 @@ const toggleUserStatus = async (user) => {
   try {
     const newStatus = user.status === 1 ? 0 : 1
     // 调用后端API更新状态
-    await $API.updateUserStatus(user.userId, newStatus)
+    await $API.updateUserStatus(user.id, newStatus)
     // 重新加载用户列表
     await loadUsers()
     ElMessage({

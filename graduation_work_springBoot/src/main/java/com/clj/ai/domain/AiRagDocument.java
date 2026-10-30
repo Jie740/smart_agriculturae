@@ -2,6 +2,8 @@ package com.clj.ai.domain;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import java.util.Date;
 import lombok.Data;
 
@@ -14,13 +16,17 @@ import lombok.Data;
 public class AiRagDocument {
     /**
      * 文档ID
+     * <p>
+     * 雪花算法生成的 19 位主键，前端 JS 无法安全表示，序列化为字符串返回。
      */
     @TableId
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     /**
-     * 知识库ID
+     * 知识库ID（同为雪花 ID，需按字符串返回）
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long knowledgeBaseId;
 
     /**

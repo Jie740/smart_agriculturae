@@ -120,6 +120,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         loginUser.setUsername(user.getUsername());
         loginUser.setPassword(user.getPassword());
         loginUser.setNickname(user.getNickname());
+        loginUser.setAvatar(user.getAvatar());
         loginUser.setEmail(user.getEmail());
         loginUser.setStatus(user.getStatus());
 

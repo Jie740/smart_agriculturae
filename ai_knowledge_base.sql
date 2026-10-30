@@ -12,7 +12,7 @@
  Target Server Version : 160015 (160015)
  File Encoding         : 65001
 
- Date: 30/10/2026 18:22:15
+ Date: 30/10/2026 21:45:08
 */
 
 
@@ -53,7 +53,8 @@ COMMENT ON TABLE "public"."ai_knowledge_base" IS 'AI知识库表';
 -- ----------------------------
 -- Records of ai_knowledge_base
 -- ----------------------------
-INSERT INTO "public"."ai_knowledge_base" VALUES (2090049979451801601, '农业知识库', '种植规范', 1, 1, '2026-08-19 20:15:20.958', 1, '2026-08-19 20:15:20.958', 1, 'f', NULL, NULL, 1);
+INSERT INTO "public"."ai_knowledge_base" VALUES (2090049979451801601, '农业知识库', '种植规范', 1, 2, '2026-08-19 20:15:20.958', 1, '2026-08-19 20:15:20.958', 1, 'f', NULL, NULL, 1);
+INSERT INTO "public"."ai_knowledge_base" VALUES (2116150928146530306, '医疗知识库', 'test', 1, 0, '2026-10-30 20:51:12.114', 1, '2026-10-30 20:51:12.114', 1, 'f', NULL, NULL, 2);
 
 -- ----------------------------
 -- Indexes structure for table ai_knowledge_base

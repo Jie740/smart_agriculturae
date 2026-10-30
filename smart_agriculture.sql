@@ -11,7 +11,7 @@
  Target Server Version : 80023 (8.0.23)
  File Encoding         : 65001
 
- Date: 30/10/2026 18:22:00
+ Date: 30/10/2026 21:51:08
 */
 
 SET NAMES utf8mb4;
@@ -98,7 +98,7 @@ CREATE TABLE `equipment`  (
 -- Records of equipment
 -- ----------------------------
 INSERT INTO `equipment` VALUES (1, '设备1', 5, 0);
-INSERT INTO `equipment` VALUES (11, '设备2', 3, 0);
+INSERT INTO `equipment` VALUES (11, '设备2', 3, 2);
 INSERT INTO `equipment` VALUES (13, '设备4', 5, 0);
 INSERT INTO `equipment` VALUES (21, '设备6', 5, 0);
 
@@ -115,7 +115,7 @@ CREATE TABLE `equipment_apply`  (
   PRIMARY KEY (`apply_id`) USING BTREE,
   INDEX `equipment_id`(`equipment_id` ASC) USING BTREE,
   INDEX `applicant_id`(`applicant_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 21 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '设备申请表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 22 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '设备申请表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of equipment_apply
@@ -128,6 +128,7 @@ INSERT INTO `equipment_apply` VALUES (11, 1, 2214, '2026-04-05 16:00:00', 2);
 INSERT INTO `equipment_apply` VALUES (12, 1, 2214, '2026-04-07 16:00:00', 1);
 INSERT INTO `equipment_apply` VALUES (19, 21, 2217, '2026-04-13 16:00:00', 1);
 INSERT INTO `equipment_apply` VALUES (20, 21, 2217, '2026-04-13 16:00:00', 0);
+INSERT INTO `equipment_apply` VALUES (21, 11, 5, '2026-10-29 16:00:00', 1);
 
 -- ----------------------------
 -- Table structure for equipment_record
@@ -142,11 +143,12 @@ CREATE TABLE `equipment_record`  (
   PRIMARY KEY (`record_id`) USING BTREE,
   INDEX `equipment_id`(`equipment_id` ASC) USING BTREE,
   INDEX `owner_id`(`owner_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '设备记录表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '设备记录表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of equipment_record
 -- ----------------------------
+INSERT INTO `equipment_record` VALUES (15, 11, 5, 1, NULL);
 
 -- ----------------------------
 -- Table structure for equipment_repair_apply
@@ -161,7 +163,7 @@ CREATE TABLE `equipment_repair_apply`  (
   PRIMARY KEY (`apply_id`) USING BTREE,
   INDEX `applicant_id`(`applicant_id` ASC) USING BTREE,
   INDEX `equipment_id`(`equipment_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 11 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '设备报修申请表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '设备报修申请表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of equipment_repair_apply
@@ -176,6 +178,7 @@ INSERT INTO `equipment_repair_apply` VALUES (7, 2214, 1, '11', '2026-04-11 17:51
 INSERT INTO `equipment_repair_apply` VALUES (8, 2214, 1, '1', '2026-04-11 17:52:19');
 INSERT INTO `equipment_repair_apply` VALUES (9, 2214, 1, '11', '2026-04-11 19:38:48');
 INSERT INTO `equipment_repair_apply` VALUES (10, 2214, 1, '故障', '2026-04-11 20:41:10');
+INSERT INTO `equipment_repair_apply` VALUES (11, 5, 11, '2121', '2026-10-30 21:01:28');
 
 -- ----------------------------
 -- Table structure for equipment_type
@@ -680,7 +683,7 @@ CREATE TABLE `sys_user`  (
 -- ----------------------------
 -- Records of sys_user
 -- ----------------------------
-INSERT INTO `sys_user` VALUES (1, '740@qq.com', '$2a$10$vLgAp3Y3l/onmEXATEU/MOow33gXuOThWzG4bYRUqT2HMhxGAbAt6', '1223', '740@qq.com', '12', NULL, 1, NULL, '2026-08-10 16:10:52', NULL, '2026-10-30 18:03:10', 1, 0, NULL);
+INSERT INTO `sys_user` VALUES (1, '740@qq.com', '$2a$10$vLgAp3Y3l/onmEXATEU/MOow33gXuOThWzG4bYRUqT2HMhxGAbAt6', '1223', '740@qq.com', '12', NULL, 1, NULL, '2026-08-10 16:10:52', NULL, '2026-10-30 11:27:01', 1, 0, NULL);
 INSERT INTO `sys_user` VALUES (3, '15323669470', '$2a$10$W5MVULHH6SdBR7AuFs6yAeKb2zRn/jioju7hAUjwEzIlSlCeT3bcu', '123', NULL, '15323669470', NULL, 1, NULL, '2026-08-10 17:09:22', NULL, '2026-10-30 18:02:30', NULL, 0, NULL);
 INSERT INTO `sys_user` VALUES (4, '153236694', '$2a$10$zA.uyqXcUFvFgITHChBcZegZ7rIeazybYlngF5ZxXuluQlXKz4ZcW', '1221', NULL, '153236694', NULL, 1, NULL, '2026-08-10 17:47:34', NULL, '2026-10-30 18:02:51', NULL, 0, NULL);
 INSERT INTO `sys_user` VALUES (5, 'b', '$2a$10$TO7reAXXxakFRsmP7RVYpeI/jh98CEQmo/rEJ4vOwKAHa84gn3ouG', 'b', 'b', 'b', NULL, 1, NULL, '2026-10-30 10:04:29', NULL, '2026-10-30 18:04:31', NULL, 0, NULL);

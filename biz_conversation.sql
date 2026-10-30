@@ -12,7 +12,7 @@
  Target Server Version : 160015 (160015)
  File Encoding         : 65001
 
- Date: 30/10/2026 18:22:50
+ Date: 30/10/2026 21:50:38
 */
 
 
@@ -47,7 +47,6 @@ COMMENT ON TABLE "public"."biz_conversation" IS 'AI对话会话表';
 -- Records of biz_conversation
 -- ----------------------------
 INSERT INTO "public"."biz_conversation" VALUES (8, '新建会话', 1, 'default', 'f', 1, '2026-09-21 16:42:29.865', 1, '2026-09-21 17:21:23.701');
-INSERT INTO "public"."biz_conversation" VALUES (3, '新建会话', 1, 'default', 'f', 1, '2026-09-18 17:02:25.227', 1, '2026-09-18 17:03:47.679');
 INSERT INTO "public"."biz_conversation" VALUES (2, '新建会话', 1, 'default', 'f', 1, '2026-09-18 17:02:25.012', 1, '2026-09-18 17:07:18.818');
 INSERT INTO "public"."biz_conversation" VALUES (4, '新建会话', 1, 'default', 'f', 1, '2026-09-18 17:06:59.429', 1, '2026-09-18 17:08:02.648');
 INSERT INTO "public"."biz_conversation" VALUES (14, '这个文件里写了什么？', 1, 'default', 'f', 1, '2026-09-21 17:36:00.266', 1, '2026-09-21 17:36:17.666');
@@ -58,6 +57,7 @@ INSERT INTO "public"."biz_conversation" VALUES (1, '新建会话', 1, 'default',
 INSERT INTO "public"."biz_conversation" VALUES (13, '新建会话', 1, 'default', 'f', 1, '2026-09-21 17:21:26.744', 1, '2026-09-21 17:41:17.891');
 INSERT INTO "public"."biz_conversation" VALUES (7, '新建会话', 1, 'default', 'f', 1, '2026-09-21 15:25:31.833', 1, '2026-10-30 17:13:58.153');
 INSERT INTO "public"."biz_conversation" VALUES (16, 'test', 1, 'default', 'f', 1, '2026-10-30 17:15:19.28', 1, '2026-10-30 18:09:15.064');
+INSERT INTO "public"."biz_conversation" VALUES (3, '主测', 1, 'default', 'f', 1, '2026-09-18 17:02:25.227', 1, '2026-10-30 21:02:16.373');
 INSERT INTO "public"."biz_conversation" VALUES (9, '请描述这张图片', 1, 'default', 'f', 1, '2026-09-21 16:48:57.659', 1, '2026-09-21 17:13:54.669');
 INSERT INTO "public"."biz_conversation" VALUES (10, '这张图片是什么颜色？只回答颜色。', 1, 'default', 'f', 1, '2026-09-21 16:50:08.211', 1, '2026-09-21 17:13:54.757');
 INSERT INTO "public"."biz_conversation" VALUES (11, '这张图片是什么颜色？只回答颜色。', 1, 'default', 'f', 1, '2026-09-21 17:11:49.109', 1, '2026-09-21 17:13:54.855');

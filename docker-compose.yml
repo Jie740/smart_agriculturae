@@ -5,6 +5,7 @@ services:
   backend:
     build:
       context: ./graduation_work_springBoot
+    image: ajiey/smart_agriculture:backend
     container_name: smart-agriculture-backend
     restart: always
     expose:
@@ -52,6 +53,7 @@ services:
   frontend:
     build:
       context: ./graduation_work_vue
+    image: ajiey/smart_agriculture:frontend
     container_name: smart-agriculture-frontend
     restart: always
     ports:
@@ -83,8 +85,8 @@ services:
 
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./graduation_work_springBoot/sql/smart_agriculture.sql:/docker-entrypoint-initdb.d/01-smart_agriculture.sql:ro
-      - ./graduation_work_springBoot/sql/rbac_init.sql:/docker-entrypoint-initdb.d/02-rbac_init.sql:ro
+      # 首次启动（数据卷为空）时按文件名顺序执行 data/mysql 下的初始化脚本
+      - ./data/mysql:/docker-entrypoint-initdb.d:ro
 
   # ============================================================
   # PostgreSQL + pgvector
@@ -105,6 +107,8 @@ services:
 
     volumes:
       - pg_data:/var/lib/postgresql/data
+      # 首次启动（数据卷为空）时按文件名顺序执行 data/postgres 下的初始化脚本
+      - ./data/postgres:/docker-entrypoint-initdb.d:ro
 
   # ============================================================
   # Redis

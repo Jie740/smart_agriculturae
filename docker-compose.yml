@@ -56,6 +56,10 @@ services:
     image: ajiey/smart_agriculture:frontend
     container_name: smart-agriculture-frontend
     restart: always
+
+    security_opt:
+      - seccomp=unconfined
+
     ports:
       - "80:80"
     depends_on:

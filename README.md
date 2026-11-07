@@ -146,9 +146,44 @@ npm test           # Jest 单元测试并输出覆盖率
 | `MYSQL_DB` / `MYSQL_USER` / `MYSQL_PASSWORD` | 业务库连接信息 | smart_agriculture / root / 123456 |
 | `PG_DB` / `PG_USER` / `PG_PASSWORD` | AI 向量库连接信息 | agriculture_ai / postgres / 123456 |
 | `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` / `MINIO_BUCKET_NAME` | MinIO 对象存储 | admin / minio_password_123 / agriculture |
+| `MINIO_PUBLIC_BASE_URL` | MinIO 附件的公网访问域名（AI 图片识别需要，见下文说明） | http://img.ajie-ai.xyz |
 | `AL_API_KEY` | 阿里云 DashScope API Key（AI 助手必需） | 无，必须设置 |
 
 后端通过环境变量注入配置（见 `application-prod.yaml`），前端容器内由 `nginx.conf` 将 `/api` 请求代理至 `backend:8080`。
+
+## AI 助手图片识别说明（重要）
+
+AI 助手的图片识别调用的是阿里云 DashScope（Qwen-VL）云端 API，**模型侧需要能通过网络地址访问到图片本身**。而 MinIO 默认只监听内网地址（如 `http://minio:9000` / `http://192.168.x.x:9000`），公网 API 无法回源取图，直接传内网 URL 会导致图片识别失败。有两种解决方式：
+
+### 方式 A：配置公网域名 + Cloudflare Tunnel（本项目采用）
+
+将内网 MinIO 的 9000 端口通过隧道映射到一个公网域名，模型和浏览器都可通过该域名直接访问图片：
+
+1. 注册域名并安装 `cloudflared`，创建 Tunnel，将公网主机名（本项目为 `img.ajie-ai.xyz`）指向内网服务：
+
+   ```bash
+   cloudflared tunnel route dns <tunnel-id> img.ajie-ai.xyz
+   cloudflared tunnel run <tunnel-id>   # 隧道源站配置为 http://minio:9000（或 localhost:9000）
+   ```
+
+2. 把域名告知后端，上传附件返回的 URL 会自动改用该域名拼接：
+
+   ```yaml
+   # application-prod.yaml（或 .env 中的 MINIO_PUBLIC_BASE_URL）
+   minio:
+     public-base-url: http://img.ajie-ai.xyz
+   ```
+
+   对应代码：[MinioServiceImpl.publicUrl()](file:///c:/Users/ajie/Desktop/graduation_work/graduation_work_springBoot/src/main/java/com/clj/ai/service/impl/MinioServiceImpl.java) 与 [MinioProperties](file:///c:/Users/ajie/Desktop/graduation_work/graduation_work_springBoot/src/main/java/com/clj/ai/config/MinioProperties.java)。留空 `public-base-url` 时回退为内网 endpoint，仅本地调试可用。
+
+### 方式 B：改为 Base64 传图（无域名/内网部署的替代方案）
+
+若无法配置公网域名，可修改对应文件，将"传图片 URL"改为"传 Base64 编码的图片数据"，让模型无需回源访问 MinIO 即可识别图片：
+
+- **后端**：当前实现已在服务端把 MinIO 图片读成字节流并转为 Base64 data URL 后再发给模型（`data:image/png;base64,...`），关键代码见 [MinioServiceImpl.readImageAsDataUrl()](file:///c:/Users/ajie/Desktop/graduation_work/graduation_work_springBoot/src/main/java/com/clj/ai/service/impl/MinioServiceImpl.java) 和 [MessageUtil.buildMultimodalMessage()](file:///c:/Users/ajie/Desktop/graduation_work/graduation_work_springBoot/src/main/java/com/clj/ai/util/MessageUtil.java)。若想彻底绕开 MinIO 存储环节，可改为前端直接上传 Base64。
+- **前端**：修改聊天页 [AgriculturalAssistant.vue](file:///c:/Users/ajie/Desktop/graduation_work/graduation_work_vue/src/views/common/AgriculturalAssistant.vue) 的附件上传逻辑——用 `FileReader.readAsDataURL()` 将图片读成 Base64，随聊天请求的 `imageUrls` 字段直接发给后端（接口封装见 [api/index.js](file:///c:/Users/ajie/Desktop/graduation_work/graduation_work_vue/src/api/index.js)），后端将 data URL 原样传入 `ImageContent.from(...)` 即可。
+
+> 注意：Base64 会使请求体增大约 1/3，过大的图片可能被模型接口拒绝，建议上传前先压缩；同时图片不再入库到 MinIO，历史消息中的图片回显需要另行处理。
 
 # 核心页面展示
 <img width="2560" height="1336" alt="image" src="https://github.com/user-attachments/assets/bfeb21fc-0818-4a89-ad3e-05e24c147df9" />

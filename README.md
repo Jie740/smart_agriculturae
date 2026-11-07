@@ -149,3 +149,19 @@ npm test           # Jest 单元测试并输出覆盖率
 | `AL_API_KEY` | 阿里云 DashScope API Key（AI 助手必需） | 无，必须设置 |
 
 后端通过环境变量注入配置（见 `application-prod.yaml`），前端容器内由 `nginx.conf` 将 `/api` 请求代理至 `backend:8080`。
+
+# 核心页面展示
+
+![da45f17051442dcd652976c8f51b57fe](C:\Users\ajie\Documents\xwechat_files\wxid_sd5xo6enwvg522_5dd3\temp\RWTemp\2026-11\da45f17051442dcd652976c8f51b57fe.png)
+
+![24dbfff085b6dfca67270d7096b76517](C:\Users\ajie\Documents\xwechat_files\wxid_sd5xo6enwvg522_5dd3\temp\RWTemp\2026-11\24dbfff085b6dfca67270d7096b76517.png)
+
+![7aa45169d11b6bcda4be2b5f815a7b9b](C:\Users\ajie\Documents\xwechat_files\wxid_sd5xo6enwvg522_5dd3\temp\RWTemp\2026-11\7aa45169d11b6bcda4be2b5f815a7b9b.png)
+
+![image-20261107145742591](C:\Users\ajie\AppData\Roaming\Typora\typora-user-images\image-20261107145742591.png)
+
+![image-20261107145723522](C:\Users\ajie\AppData\Roaming\Typora\typora-user-images\image-20261107145723522.png)
+
+![image-20261107145819553](C:\Users\ajie\AppData\Roaming\Typora\typora-user-images\image-20261107145819553.png)
+
+![8efa19210b5571ec81ca4c1483ab5b3e](C:\Users\ajie\Documents\xwechat_files\wxid_sd5xo6enwvg522_5dd3\temp\RWTemp\2026-11\8efa19210b5571ec81ca4c1483ab5b3e.png)

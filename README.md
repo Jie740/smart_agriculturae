@@ -152,18 +152,12 @@ npm test           # Jest 单元测试并输出覆盖率
 
 # 核心页面展示
 <img width="2560" height="1336" alt="image" src="https://github.com/user-attachments/assets/bfeb21fc-0818-4a89-ad3e-05e24c147df9" />
-
-
-![da45f17051442dcd652976c8f51b57fe](C:\Users\ajie\Documents\xwechat_files\wxid_sd5xo6enwvg522_5dd3\temp\RWTemp\2026-11\da45f17051442dcd652976c8f51b57fe.png)
-
-![24dbfff085b6dfca67270d7096b76517](C:\Users\ajie\Documents\xwechat_files\wxid_sd5xo6enwvg522_5dd3\temp\RWTemp\2026-11\24dbfff085b6dfca67270d7096b76517.png)
-
-![7aa45169d11b6bcda4be2b5f815a7b9b](C:\Users\ajie\Documents\xwechat_files\wxid_sd5xo6enwvg522_5dd3\temp\RWTemp\2026-11\7aa45169d11b6bcda4be2b5f815a7b9b.png)
-
-![image-20261107145742591](C:\Users\ajie\AppData\Roaming\Typora\typora-user-images\image-20261107145742591.png)
-
-![image-20261107145723522](C:\Users\ajie\AppData\Roaming\Typora\typora-user-images\image-20261107145723522.png)
-
-![image-20261107145819553](C:\Users\ajie\AppData\Roaming\Typora\typora-user-images\image-20261107145819553.png)
-
-![8efa19210b5571ec81ca4c1483ab5b3e](C:\Users\ajie\Documents\xwechat_files\wxid_sd5xo6enwvg522_5dd3\temp\RWTemp\2026-11\8efa19210b5571ec81ca4c1483ab5b3e.png)
+<img width="2560" height="1344" alt="image" src="https://github.com/user-attachments/assets/b1c714db-36de-4a3b-bcc5-3d01ea5c62ff" />
+<img width="2559" height="1327" alt="image" src="https://github.com/user-attachments/assets/62abdd52-5199-487b-b28a-a893dae73378" />
+<img width="2558" height="1337" alt="image" src="https://github.com/user-attachments/assets/3679bbc4-5993-4032-8000-4d56e2bbe56d" />
+<img width="2560" height="1363" alt="image" src="https://github.com/user-attachments/assets/5038e9ce-ca31-4c34-9729-752fec1dc51e" />
+<img width="2559" height="1344" alt="image" src="https://github.com/user-attachments/assets/29dd4e31-3516-4e84-8e7a-fbce8c5c0ed4" />
+<img width="2560" height="1339" alt="image" src="https://github.com/user-attachments/assets/30b859ba-e11d-4599-84cf-9870fff32a13" />
+<img width="2554" height="1347" alt="image" src="https://github.com/user-attachments/assets/fe855061-f843-4b0a-8f94-a192e6624ce6" />
+<img width="2553" height="1342" alt="image" src="https://github.com/user-attachments/assets/379b609e-a22a-4cce-8a0f-7419ce88598a" />
+<img width="2560" height="1354" alt="image" src="https://github.com/user-attachments/assets/7ab23a1d-460d-48e4-94c9-a7932807fa50" />

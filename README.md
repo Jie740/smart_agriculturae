@@ -151,6 +151,8 @@ npm test           # Jest 单元测试并输出覆盖率
 后端通过环境变量注入配置（见 `application-prod.yaml`），前端容器内由 `nginx.conf` 将 `/api` 请求代理至 `backend:8080`。
 
 # 核心页面展示
+<img width="2560" height="1336" alt="image" src="https://github.com/user-attachments/assets/bfeb21fc-0818-4a89-ad3e-05e24c147df9" />
+
 
 ![da45f17051442dcd652976c8f51b57fe](C:\Users\ajie\Documents\xwechat_files\wxid_sd5xo6enwvg522_5dd3\temp\RWTemp\2026-11\da45f17051442dcd652976c8f51b57fe.png)
 

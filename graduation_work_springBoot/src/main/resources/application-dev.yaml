@@ -4,41 +4,41 @@ spring:
     mysql:
       username: root
       password: 123
-      url: jdbc:mysql://192.168.127.128:3306/smart_agriculture?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      url: jdbc:mysql://172.20.126.39:3307/smart_agriculture?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       driver-class-name: com.mysql.cj.jdbc.Driver
+
     postgres:
-      jdbc-url: jdbc:postgresql://192.168.127.128:5432/agriculture_ai
+      jdbc-url: jdbc:postgresql://172.20.126.39:5433/agriculture_ai
       username: postgres
       password: 123456
       driver-class-name: org.postgresql.Driver
 
   cache:
     type: redis
+
   data:
     redis:
-      host: 192.168.127.128
-      port: 6379
+      host: 172.20.126.39
+      port: 6380
       database: 1
 
 minio:
-  # 内网直连地址，仅后端读写文件时使用
-  endpoint: http://192.168.127.128:9000
-  # 对外访问域名（服务器已把 img.ajie-ai.xyz 绑定到 MinIO），入库和给模型用的都是这个地址
-  public-base-url: http://img.ajie-ai.xyz
+  endpoint: http://172.20.126.39:9002
+  public-base-url: http://img-dev.ajie-ai.xyz
   accessKey: admin
   secretKey: 12345678
   bucketName: agriculture
 
-# AI RAG 配置
 ai:
   embedding:
     api-key: ${AL_API_KEY}
     base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
     model-name: text-embedding-v3
     dimensions: 1024
+
   pgvector:
-    host: 192.168.127.128
-    port: 5432
+    host: 172.20.126.39
+    port: 5433
     database: agriculture_ai
     user: postgres
     password: 123456

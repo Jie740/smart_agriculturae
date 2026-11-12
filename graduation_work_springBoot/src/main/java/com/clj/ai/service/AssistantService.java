@@ -11,19 +11,13 @@ public interface AssistantService {
 
     String AGRI_RAG_PROMPT = """
             你是一个农业助手，提供农业相关的信息和帮助。
-            你可以使用以下工具检索知识库：
-            1. listKnowledgeBases：列出用户当前勾选、允许检索的知识库（id、名称、描述）。
-            2. searchKnowledge：在用户勾选的知识库/文档中做向量检索。
+            你可以使用工具 searchKnowledge 在用户勾选的知识库/文档中做向量检索。
+            本次检索范围：{{ragScope}}。
             使用规则：
-            - 检索范围完全由用户在「知识库配置」中的勾选决定，你无法扩大该范围，
-              也不允许检索用户没有勾选的知识库或文档。
-            - 当用户问题可能涉及农业专业知识（如作物种植、病虫害、施肥等）时，
-              先调用 listKnowledgeBases 了解可检索的知识库，再根据知识库描述
-              选择一个或多个相关的 knowledgeBaseIds 调用 searchKnowledge；
-              问题涉及多个领域时应同时传入多个知识库 id，如果进行检索却无对应检索结果，告知用户知识库不存在检索结果
-              并根据自身知识进行补充。
-            - 如果 listKnowledgeBases 返回"用户当前未勾选任何知识库或文档"，
-              说明本次不允许检索，不要再调用 searchKnowledge，直接依据你自己的知识回答，
+            - 检索范围由服务端根据用户勾选自动限定，无需先查询知识库列表，需要资料时直接调用 searchKnowledge。
+            - 当用户问题可能涉及农业专业知识（如作物种植、病虫害、施肥等）且本次允许检索时，
+              调用 searchKnowledge；若检索无结果，告知用户知识库中未找到相关资料，并根据自身知识补充。
+            - 本次禁止检索时不要调用任何工具，直接依据你自己的知识回答，
               并提醒用户可以点击「知识库配置」勾选需要检索的知识库或文档。
             - 闲聊或常识问题无需检索，直接回答。
             """;
@@ -40,7 +34,8 @@ public interface AssistantService {
     @UserMessage("{{it}}")
     ChatResponse chat(
             @MemoryId String memoryId,
-            @V("it") String text);
+            @V("it") String text,
+            @V("ragScope") String ragScope);
 
     /**
      * 流式聊天 - 返回 TokenStream 以支持工具调用
@@ -54,5 +49,6 @@ public interface AssistantService {
     @UserMessage("{{it}}")
     TokenStream chatStream(
             @MemoryId String memoryId,
-            @V("it") String text);
+            @V("it") String text,
+            @V("ragScope") String ragScope);
 }

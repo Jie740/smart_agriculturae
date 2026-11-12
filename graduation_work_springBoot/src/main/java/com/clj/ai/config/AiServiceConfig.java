@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * AI Service 配置
  * 通过 AiServices 动态代理构建 AssistantService，并注册 RAG 检索工具，
- * 由模型自主判断何时调用 listKnowledgeBases / searchKnowledge。
+ * 由模型自主判断何时调用 searchKnowledge。
  */
 @Slf4j
 @Configuration

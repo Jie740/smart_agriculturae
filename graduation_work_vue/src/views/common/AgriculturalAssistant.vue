@@ -25,7 +25,7 @@
           新建会话
         </el-button>
 
-        <div class="conversation-list">
+        <div ref="conversationListRef" class="conversation-list">
           <div class="list-heading">
             <span>会话记录</span>
             <span class="conversation-count">{{ conversations.length }}</span>
@@ -78,7 +78,7 @@
       <section class="chat-panel">
         <div ref="chatHistoryRef" class="chat-history">
           <div v-if="!messages.length" class="empty-state">
-            <el-icon :size="64" color="#67c23a"><ChatLineRound /></el-icon>
+            <el-icon :size="44" color="#9fb3c8"><ChatLineRound /></el-icon>
             <h2>欢迎使用农业助手</h2>
             <p>输入问题后，回答会以流式方式显示并自动保存。</p>
           </div>
@@ -89,7 +89,7 @@
             :class="['chat-message', message.role === 'user' ? 'user' : 'assistant']"
           >
             <el-avatar
-              :size="40"
+              :size="36"
               :class="message.role === 'user' ? 'user-avatar' : 'assistant-avatar'"
             >
               <el-icon v-if="message.role === 'user'"><User /></el-icon>
@@ -103,12 +103,21 @@
               </div>
 
               <div v-if="editingMessageId === message.id" class="edit-box">
-                <el-input v-model="editDraft" type="textarea" :rows="3" resize="none" />
+                <el-input
+                  v-model="editDraft"
+                  type="textarea"
+                  :rows="4"
+                  resize="none"
+                  placeholder="修改问题后将以新消息重新提问"
+                  class="edit-textarea"
+                />
                 <div class="edit-actions">
-                  <el-button text @click="cancelEdit">取消</el-button>
-                  <el-button type="primary" :loading="sending" @click="submitEdit(message)"
-                    >重新生成</el-button
-                  >
+                  <!-- <span class="edit-hint">基于当前对话记录重新提问，原消息不会被删除</span> -->
+                  <el-button plain @click="cancelEdit">取消</el-button>
+                  <el-button type="primary" :loading="sending" @click="submitEdit">
+                    <el-icon><RefreshRight /></el-icon>
+                    <span>重新生成</span>
+                  </el-button>
                 </div>
               </div>
               <div v-else class="message-content">
@@ -132,7 +141,9 @@
                       target="_blank"
                       rel="noreferrer"
                     >
-                      <el-icon><Document /></el-icon>
+                      <el-icon :color="attachmentIconInfo(attachment).color">
+                        <component :is="attachmentIconInfo(attachment).icon" />
+                      </el-icon>
                       <span>{{ attachment.name }}</span>
                     </a>
                   </template>
@@ -196,7 +207,7 @@
               @click="knowledgeDrawerVisible = true"
             >
               <el-icon><Collection /></el-icon>
-              {{ scopeSummary || '选择检索范围' }}
+              <span class="scope-text">{{ scopeSummary || '选择检索范围' }}</span>
             </el-button>
           </div>
           <div v-if="attachments.length" class="attachment-list">
@@ -209,7 +220,9 @@
                 :preview-teleported="true"
                 fit="cover"
               />
-              <el-icon v-else class="attachment-file-icon"><Document /></el-icon>
+              <el-icon v-else class="attachment-file-icon" :color="attachmentIconInfo(attachment).color">
+                <component :is="attachmentIconInfo(attachment).icon" />
+              </el-icon>
               <span class="attachment-name" :title="attachment.name">{{ attachment.name }}</span>
               <el-button text circle title="删除附件" @click="removeAttachment(attachment.id)">
                 <el-icon><Close /></el-icon>
@@ -268,13 +281,18 @@ import {
   Collection,
   CopyDocument,
   Cpu,
+  DataAnalysis,
   Delete,
   Document,
   Edit,
+  EditPen,
+  Grid,
   MoreFilled,
+  Notebook,
   Plus,
   Promotion,
   QuestionFilled,
+  RefreshRight,
   Setting,
   User,
   VideoPause,
@@ -295,6 +313,7 @@ const conversations = ref([])
 const conversationId = ref(null)
 const sending = ref(false)
 const chatHistoryRef = ref(null)
+const conversationListRef = ref(null)
 const abortController = ref(null)
 const editingMessageId = ref(null)
 const editDraft = ref('')
@@ -306,11 +325,10 @@ const chatAttachmentAccept =
   '.jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.txt,.md,.xlsx,.xls,.ppt,.pptx,.csv'
 const allowedAttachmentPattern =
   /\.(jpg|jpeg|png|gif|webp|bmp|pdf|doc|docx|txt|md|xlsx|xls|ppt|pptx|csv)$/i
+const scopeCounts = ref({ knowledgeBaseCount: 0, documentCount: 0 })
 const scopeSummary = computed(() => {
-  const knowledgeCount = selectedKnowledgeBaseIds.value.length
-  const documentCount = selectedDocumentIds.value.length
-  if (!knowledgeCount && !documentCount) return ''
-  return `检索范围：${knowledgeCount} 个知识库，${documentCount} 篇文档`
+  if (!selectedKnowledgeBaseIds.value.length && !selectedDocumentIds.value.length) return ''
+  return `检索范围：${scopeCounts.value.knowledgeBaseCount} 个知识库，${scopeCounts.value.documentCount} 篇文档`
 })
 
 const typingState = {
@@ -335,12 +353,22 @@ const renderMarkdown = (content) => {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+    // GFM 会把成对的单个 ~ 当删除线,模型常用 ~ 表示数值范围(如 4500~5000),
+    // 转义非 ~~ 的孤立波浪号,保留真正的 ~~删除线~~ 语法
+    .replace(/(?<!~)~(?!~)/g, '\\~')
   return marked.parse(escaped)
 }
 
 const scrollToBottom = () => {
   nextTick(() => {
-    if (chatHistoryRef.value) chatHistoryRef.value.scrollTop = chatHistoryRef.value.scrollHeight
+    const el = chatHistoryRef.value
+    if (!el) return
+    // 桌面端消息区内部滚动;移动端整页滚动时跟随外层容器,保证新内容可见
+    el.scrollTop = el.scrollHeight
+    const wrapper = el.closest('.content-wrapper')
+    if (wrapper && wrapper.scrollHeight > wrapper.clientHeight) {
+      wrapper.scrollTop = wrapper.scrollHeight
+    }
   })
 }
 
@@ -387,6 +415,27 @@ const isImageAttachment = (attachment) =>
   String(attachment?.type || '')
     .toLowerCase()
     .startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(attachment?.name || '')
+
+// 按扩展名匹配文件图标与类型色,未识别的类型回退为通用文档图标
+const ATTACHMENT_ICON_MAP = {
+  pdf: { icon: Document, color: '#ef4444' },
+  doc: { icon: EditPen, color: '#2b6cb0' },
+  docx: { icon: EditPen, color: '#2b6cb0' },
+  xls: { icon: Grid, color: '#1d9053' },
+  xlsx: { icon: Grid, color: '#1d9053' },
+  csv: { icon: Grid, color: '#1d9053' },
+  md: { icon: Notebook, color: '#7c3aed' },
+  txt: { icon: Document, color: '#64748b' },
+  ppt: { icon: DataAnalysis, color: '#ea8c2e' },
+  pptx: { icon: DataAnalysis, color: '#ea8c2e' },
+}
+const attachmentIconInfo = (attachment) => {
+  const ext = String(attachment?.name || '')
+    .split('.')
+    .pop()
+    .toLowerCase()
+  return ATTACHMENT_ICON_MAP[ext] || { icon: Document, color: '#64748b' }
+}
 
 // 附件入库的是公网域名地址（img.ajie-ai.xyz），本地开发时该域名不可达，
 // 图片缩略图和预览都会加载失败，这里在显示层重写为开发 MinIO 的局域网地址；
@@ -435,9 +484,18 @@ const removeAttachment = (id) => {
   attachments.value = attachments.value.filter((item) => item.id !== id)
 }
 
-const handleSelectionChange = ({ knowledgeBaseIds = [], documentIds = [] }) => {
+const handleSelectionChange = ({
+  knowledgeBaseIds = [],
+  documentIds = [],
+  knowledgeBaseCount,
+  documentCount,
+}) => {
   selectedKnowledgeBaseIds.value = [...knowledgeBaseIds]
   selectedDocumentIds.value = [...documentIds]
+  scopeCounts.value = {
+    knowledgeBaseCount: knowledgeBaseCount ?? selectedKnowledgeBaseIds.value.length,
+    documentCount: documentCount ?? selectedDocumentIds.value.length,
+  }
 }
 
 const loadConversations = async () => {
@@ -579,14 +637,16 @@ const startTyping = () => {
     }
 
     if (typingState.queue.length > 0) {
-      typingState.message.content += typingState.queue.charAt(0)
-      typingState.queue = typingState.queue.slice(1)
+      // 自适应追赶：积压越多每帧输出的字符越多，避免落后于模型流
+      const step = Math.max(1, Math.ceil(typingState.queue.length / 8))
+      typingState.message.content += typingState.queue.slice(0, step)
+      typingState.queue = typingState.queue.slice(step)
       scrollToBottom()
       return
     }
 
     settleTyping()
-  }, 24)
+  }, 16)
 }
 
 const queueTypingText = (message, text) => {
@@ -611,19 +671,16 @@ const waitForTyping = () => {
   })
 }
 
-const submitEdit = async (message) => {
+const submitEdit = async () => {
   const content = editDraft.value.trim()
   if (!content || sending.value) return
   if (content.length > MAX_TEXT_LENGTH) {
     ElMessage.warning(`输入文本不能超过 ${MAX_TEXT_LENGTH} 个字符`)
     return
   }
-  const index = messages.value.findIndex((item) => item.id === message.id)
-  if (index === -1) return
-  messages.value = messages.value.slice(0, index + 1)
-  messages.value[index].content = content
   cancelEdit()
-  await streamMessage(content, message.id)
+  // 基于当前会话原有消息，把编辑后的内容作为新消息重新提问（不删除任何历史）
+  await streamMessage(content)
 }
 
 const parseSseEvent = (block) => {
@@ -776,7 +833,27 @@ const stopGeneration = () => {
   ElMessage.info('已停止生成，已保留当前内容')
 }
 
+// 滚动条仅在用户实际操作（滚轮/触摸/按下）时短暂显示，自动滚动不触发
+const scrollHintCleanups = []
+const bindScrollHint = (el) => {
+  if (!el) return
+  let timer = null
+  const show = () => {
+    el.classList.add('is-scrolling')
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(() => el.classList.remove('is-scrolling'), 1000)
+  }
+  const events = ['wheel', 'pointerdown', 'touchstart']
+  events.forEach((name) => el.addEventListener(name, show, { passive: true }))
+  scrollHintCleanups.push(() => {
+    if (timer) clearTimeout(timer)
+    events.forEach((name) => el.removeEventListener(name, show))
+  })
+}
+
 onMounted(async () => {
+  bindScrollHint(chatHistoryRef.value)
+  bindScrollHint(conversationListRef.value)
   try {
     await loadConversations()
     if (conversations.value.length) await selectConversation(conversations.value[0].id)
@@ -786,6 +863,8 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  scrollHintCleanups.forEach((fn) => fn())
+  scrollHintCleanups.length = 0
   if (abortController.value) abortController.value.abort()
   resetTypingState()
 })
@@ -801,17 +880,19 @@ onBeforeUnmount(() => {
 .page-header {
   flex: 0 0 auto;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
+  gap: 10px 16px;
+  padding: 14px 20px;
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+  border: 1px solid #e3e7ec;
+  border-radius: 6px;
 }
 .page-header h1 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
+  font-weight: 600;
   color: #1f2937;
 }
 .page-header p {
@@ -828,6 +909,10 @@ onBeforeUnmount(() => {
   color: #6b7280;
   font-size: 12px;
   white-space: nowrap;
+  padding: 3px 10px;
+  border: 1px solid #e3e7ec;
+  border-radius: 4px;
+  background: #f8fafc;
 }
 .page-body {
   flex: 1;
@@ -841,11 +926,12 @@ onBeforeUnmount(() => {
 .chat-panel {
   min-height: 0;
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+  border: 1px solid #e3e7ec;
+  border-radius: 6px;
 }
 .sidebar {
-  padding: 16px;
+  background: #fafbfc;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -859,19 +945,24 @@ onBeforeUnmount(() => {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 .conversation-list {
   flex: 1;
+  overflow-y: auto;
+}
+.quick-questions {
   overflow-y: auto;
 }
 .list-heading {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #374151;
-  font-size: 13px;
+  color: #6b7280;
+  font-size: 12px;
   font-weight: 600;
+  padding: 0 2px;
+  margin-bottom: 4px;
 }
 .conversation-count {
   color: #9ca3af;
@@ -884,15 +975,22 @@ onBeforeUnmount(() => {
   width: 100%;
   border: 0;
   border-radius: 6px;
-  background: #f8fafc;
-  padding: 8px;
+  background: transparent;
+  padding: 8px 10px;
   text-align: left;
   cursor: pointer;
-  color: #374151;
+  color: #4b5563;
+  transition: background 0.15s ease;
+}
+.conversation-item:hover {
+  background: #f1f3f6;
 }
 .conversation-item.active {
-  color: #2563eb;
-  background: #eff6ff;
+  background: #e8edf3;
+  color: #1f2937;
+}
+.conversation-item.active .conversation-title {
+  font-weight: 600;
 }
 .conversation-main {
   flex: 1;
@@ -905,6 +1003,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 13px;
 }
 .conversation-main small {
   color: #9ca3af;
@@ -912,6 +1011,12 @@ onBeforeUnmount(() => {
 }
 .conversation-menu {
   flex: 0 0 auto;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.conversation-item:hover .conversation-menu,
+.conversation-item.active .conversation-menu {
+  opacity: 1;
 }
 .question-item {
   display: flex;
@@ -921,12 +1026,20 @@ onBeforeUnmount(() => {
   background: transparent;
   color: #6b7280;
   text-align: left;
-  padding: 5px 0;
+  padding: 6px 8px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+.question-item .el-icon {
+  color: #9ca3af;
 }
 .question-item:hover {
   color: #2563eb;
+  background: #f1f3f6;
 }
 .chat-panel {
   display: flex;
@@ -936,10 +1049,42 @@ onBeforeUnmount(() => {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 16px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 18px;
+}
+/* 细滚动条：默认隐藏，仅用户滑动（is-scrolling）或悬停滑块时显示 */
+.conversation-list,
+.chat-history {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.conversation-list.is-scrolling,
+.chat-history.is-scrolling {
+  scrollbar-color: rgba(100, 116, 139, 0.4) transparent;
+}
+.conversation-list::-webkit-scrollbar,
+.chat-history::-webkit-scrollbar {
+  width: 8px;
+}
+.conversation-list::-webkit-scrollbar-track,
+.chat-history::-webkit-scrollbar-track {
+  background: transparent;
+}
+.conversation-list::-webkit-scrollbar-thumb,
+.chat-history::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 4px;
+  background-color: transparent;
+  background-clip: padding-box;
+  transition: background-color 0.25s ease;
+}
+.conversation-list.is-scrolling::-webkit-scrollbar-thumb,
+.chat-history.is-scrolling::-webkit-scrollbar-thumb,
+.conversation-list::-webkit-scrollbar-thumb:hover,
+.chat-history::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 116, 139, 0.45);
 }
 .empty-state {
   height: 100%;
@@ -952,8 +1097,14 @@ onBeforeUnmount(() => {
   color: #6b7280;
 }
 .empty-state h2 {
-  margin: 16px 0 8px;
-  color: #111827;
+  margin: 14px 0 6px;
+  color: #374151;
+  font-size: 16px;
+  font-weight: 600;
+}
+.empty-state p {
+  margin: 0;
+  font-size: 13px;
 }
 .chat-message {
   display: flex;
@@ -964,13 +1115,14 @@ onBeforeUnmount(() => {
   flex-direction: row-reverse;
 }
 .assistant-avatar {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
+  background: #4d7c5f;
 }
 .user-avatar {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: #2563eb;
 }
 .message-card {
   max-width: min(760px, 100%);
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -984,19 +1136,49 @@ onBeforeUnmount(() => {
   font-size: 12px;
   color: #9ca3af;
 }
-.message-content,
-.edit-box {
-  padding: 14px 16px;
+.message-content {
+  padding: 12px 16px;
   border-radius: 8px;
-  background: #f9fafb;
-  color: #111827;
-  border: 1px solid #e5e7eb;
+  background: #f5f6f8;
+  color: #1f2937;
   line-height: 1.7;
 }
 .chat-message.user .message-content {
   background: #2563eb;
   color: #fff;
-  border-color: #2563eb;
+}
+.chat-message.user .message-text :deep(a) {
+  color: #fff;
+}
+.chat-message.user .message-file {
+  background: rgba(255, 255, 255, 0.16);
+}
+.edit-box {
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.12);
+  line-height: 1.7;
+  animation: editBoxIn 0.18s ease-out;
+}
+.edit-box .edit-textarea :deep(.el-textarea__inner) {
+  box-shadow: 0 0 0 1px #dbeafe inset;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #111827;
+  transition:
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+.edit-box .edit-textarea :deep(.el-textarea__inner:hover) {
+  box-shadow: 0 0 0 1px #bfdbfe inset;
+}
+.edit-box .edit-textarea :deep(.el-textarea__inner:focus) {
+  box-shadow: 0 0 0 1.5px #2563eb inset;
+  background: #fff;
 }
 .message-attachments {
   display: flex;
@@ -1014,7 +1196,7 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  max-width: 260px;
+  max-width: min(260px, 100%);
   padding: 6px 8px;
   border-radius: 5px;
   color: inherit;
@@ -1115,24 +1297,71 @@ onBeforeUnmount(() => {
   background: rgba(15, 23, 42, 0.03);
 }
 .message-text :deep(table) {
-  width: 100%;
-  margin: 10px 0;
-  border-collapse: collapse;
+  /* fit-content: 列少时外框收缩贴合内容，避免右侧空白；列多时靠 max-width 触发横向滚动 */
+  width: fit-content;
+  max-width: 100%;
+  margin: 12px 0;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 14px;
   display: block;
   overflow-x: auto;
+  /* 触屏:允许手指横向拖动表格,不与页面纵向滚动互相抢占 */
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  background: #fff;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}
+/* 加粗且常驻可见,保证触屏/平板能用手指拖动横向滚动条 */
+.message-text :deep(table::-webkit-scrollbar) {
+  height: 12px;
+}
+.message-text :deep(table::-webkit-scrollbar-track) {
+  background: rgba(148, 163, 184, 0.18);
+  border-radius: 6px;
+  margin: 0 4px 2px;
+}
+.message-text :deep(table::-webkit-scrollbar-thumb) {
+  background: rgba(100, 116, 139, 0.6);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 .message-text :deep(th),
 .message-text :deep(td) {
-  border: 1px solid rgba(148, 163, 184, 0.45);
-  padding: 6px 12px;
+  padding: 8px 14px;
   text-align: left;
   vertical-align: top;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.28);
+  border-right: 1px solid rgba(148, 163, 184, 0.18);
 }
-.message-text :deep(th) {
+.message-text :deep(th:last-child),
+.message-text :deep(td:last-child) {
+  border-right: none;
+}
+.message-text :deep(tbody tr:last-child td) {
+  border-bottom: none;
+}
+.message-text :deep(thead th) {
   font-weight: 600;
-  background: rgba(15, 23, 42, 0.05);
+  color: #fff;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
   white-space: nowrap;
+  text-align: center;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.5);
+}
+.message-text :deep(tbody tr:nth-child(even)) {
+  background: rgba(37, 99, 235, 0.045);
+}
+.message-text :deep(tbody tr:hover) {
+  background: rgba(37, 99, 235, 0.09);
+}
+.message-text :deep(td code),
+.message-text :deep(th code) {
+  font-size: 12.5px;
 }
 .message-text :deep(pre) {
   margin: 10px 0;
@@ -1156,19 +1385,43 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 2px;
   align-self: flex-start;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.chat-message:hover .message-actions {
+  opacity: 1;
 }
 .chat-message.user .message-actions {
   align-self: flex-end;
 }
 .edit-actions {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 10px;
+}
+.edit-hint {
+  flex: 1;
+  font-size: 12px;
+  color: #94a3b8;
+}
+.edit-actions :deep(.el-button .el-icon) {
+  margin-right: 4px;
+}
+@keyframes editBoxIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .typing-cursor {
   display: inline-block;
   margin-left: 2px;
+  color: #94a3b8;
   animation: blink 1s steps(1) infinite;
 }
 @keyframes blink {
@@ -1186,7 +1439,7 @@ onBeforeUnmount(() => {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #22c55e;
+  background: #94a3b8;
   animation: bounce 1.2s infinite ease-in-out;
 }
 .loading-dots span:nth-child(2) {
@@ -1211,6 +1464,19 @@ onBeforeUnmount(() => {
   border-top: 1px solid #e5e7eb;
   padding: 14px 16px;
 }
+.composer :deep(.el-textarea__inner) {
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 0 0 1px #d9dde3 inset;
+  line-height: 1.6;
+  transition: box-shadow 0.2s ease;
+}
+.composer :deep(.el-textarea__inner:hover) {
+  box-shadow: 0 0 0 1px #c3cad3 inset;
+}
+.composer :deep(.el-textarea__inner:focus) {
+  box-shadow: 0 0 0 1px #2563eb inset;
+}
 .composer-toolbar {
   display: flex;
   align-items: center;
@@ -1225,6 +1491,10 @@ onBeforeUnmount(() => {
 .scope-button {
   margin-left: auto;
   max-width: 360px;
+  min-width: 0;
+}
+.scope-text {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1240,7 +1510,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   min-width: 0;
-  max-width: 240px;
+  max-width: min(240px, 100%);
   padding: 4px 6px;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
@@ -1289,30 +1559,208 @@ onBeforeUnmount(() => {
   font-size: 12px;
   font-weight: 500;
 }
+/* ===== 平板 / 窄窗口:侧栏改为横向双栏,避免被压扁 ===== */
 @media (max-width: 1024px) {
   .page-body {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 12px;
   }
   .sidebar {
-    max-height: 300px;
+    height: 230px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas:
+      'new quick'
+      'list quick';
+    gap: 10px 16px;
+    padding: 12px;
+  }
+  .new-conversation {
+    grid-area: new;
+  }
+  .conversation-list {
+    grid-area: list;
+  }
+  .quick-questions {
+    grid-area: quick;
   }
 }
-@media (max-width: 720px) {
+
+/* ===== 手机 / 矮屏:整页自然滚动 + 输入区吸底,杜绝组件被截断 ===== */
+@media (max-width: 720px), (max-width: 1024px) and (max-height: 560px) {
+  .assistant-page {
+    height: auto;
+    min-height: 100%;
+  }
   .page-header {
-    align-items: flex-start;
+    padding: 12px 14px;
   }
   .header-actions {
     flex-wrap: wrap;
     justify-content: flex-end;
+    row-gap: 6px;
   }
   .scope-summary {
     display: none;
+  }
+  .page-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 10px;
+  }
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: auto;
+    padding: 12px;
+  }
+  /* 会话记录压缩为单行横滑胶囊,不再占据聊天区上方的大块空间 */
+  .conversation-list {
+    flex: none;
+    max-height: none;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+  }
+  .conversation-list .list-heading {
+    display: none;
+  }
+  .conversation-item {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: 220px;
+    border: 1px solid #e3e7ec;
+    border-radius: 999px;
+    background: #fff;
+    padding: 6px 10px;
+  }
+  .conversation-item.active {
+    border-color: #2563eb;
+    background: #e8f0fe;
+  }
+  .conversation-main {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+  }
+  .conversation-main small {
+    display: none;
+  }
+  .conversation-title {
+    font-size: 12px;
+  }
+  .quick-questions {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+  }
+  .quick-questions .list-heading {
+    flex: 0 0 auto;
+    margin-bottom: 0;
+  }
+  .question-item {
+    flex: 0 0 auto;
+    border: 1px solid #e3e7ec;
+    border-radius: 999px;
+    background: #fff;
+    padding: 5px 10px;
+    white-space: nowrap;
+  }
+  .chat-history {
+    flex: none;
+    min-height: 0;
+    overflow: visible;
+    padding: 14px 12px;
+    gap: 14px;
+  }
+  .message-card {
+    max-width: calc(100% - 48px);
+  }
+  .message-content {
+    padding: 10px 12px;
+  }
+  .empty-state {
+    min-height: 200px;
+  }
+  .composer {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: #fff;
+    padding: 10px 12px;
+    border-radius: 0 0 6px 6px;
+  }
+  .composer-toolbar {
+    gap: 6px;
   }
   .attachment-hint {
     display: none;
   }
   .scope-button {
-    max-width: 220px;
+    max-width: calc(100% - 44px);
+  }
+  .composer-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .hint {
+    display: none;
+  }
+  .composer-right {
+    width: 100%;
+  }
+  .text-limit-warning {
+    flex: 1;
+    min-width: 0;
+    white-space: normal;
+    line-height: 1.4;
+    text-align: right;
+  }
+}
+
+/* ===== 小屏手机:头部按钮等分,消息区进一步收紧 ===== */
+@media (max-width: 480px) {
+  .page-header h1 {
+    font-size: 15px;
+  }
+  .page-header p {
+    font-size: 12px;
+  }
+  .header-actions {
+    width: 100%;
+  }
+  .header-actions .el-button {
+    flex: 1;
+    margin-left: 0;
+    padding: 8px 10px;
+  }
+  .chat-message {
+    gap: 8px;
+  }
+  .message-card {
+    max-width: calc(100% - 44px);
+  }
+  .message-meta {
+    font-size: 11px;
+  }
+}
+
+/* ===== 触屏设备无 hover:菜单与操作按钮常显 ===== */
+@media (hover: none) {
+  .conversation-menu,
+  .message-actions {
+    opacity: 1;
   }
 }
 </style>

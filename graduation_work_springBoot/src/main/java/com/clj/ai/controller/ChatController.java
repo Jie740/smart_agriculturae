@@ -164,17 +164,21 @@ public class ChatController {
             }
             emitter.send(SseEmitter.event().name("conversation").data(conversation.getId().toString()));
 
-            RagSelectionContext.set(
-                    memoryId,
-                    chatRequestDto.getKnowledgeBaseIds() == null ? List.of() : chatRequestDto.getKnowledgeBaseIds(),
-                    chatRequestDto.getDocumentIds() == null ? List.of() : chatRequestDto.getDocumentIds());
+            List<Long> knowledgeBaseIds = chatRequestDto.getKnowledgeBaseIds() == null
+                    ? List.of() : chatRequestDto.getKnowledgeBaseIds();
+            List<Long> documentIds = chatRequestDto.getDocumentIds() == null
+                    ? List.of() : chatRequestDto.getDocumentIds();
+            RagSelectionContext.set(memoryId, knowledgeBaseIds, documentIds);
             // 文本（含文档附件说明）作为普通用户消息发送；
             // 带图片时额外登记一条多模态消息，由 chatRequestTransformer 注入
             String modelText = messageUtil.buildText(chatRequestDto);
             if (messageUtil.hasImages(chatRequestDto)) {
                 PendingUserMessageContext.set(memoryId, messageUtil.buildMultimodalMessage(chatRequestDto, modelText));
             }
-            TokenStream tokenStream = assistantService.chatStream(memoryId, modelText);
+            String ragScope = (!knowledgeBaseIds.isEmpty() || !documentIds.isEmpty())
+                    ? "用户已勾选知识库/文档，允许检索"
+                    : "用户未勾选任何知识库或文档，本次禁止检索";
+            TokenStream tokenStream = assistantService.chatStream(memoryId, modelText, ragScope);
             tokenStream
                     .onPartialResponse(token -> {
                         if (cancelled.get()) {

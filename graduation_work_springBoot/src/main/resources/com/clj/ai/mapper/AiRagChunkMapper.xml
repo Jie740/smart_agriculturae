@@ -31,7 +31,8 @@
         deleted_by
     </sql>
 
-    <!-- 向量相似度检索：仅检索启用且未删除的分块，按余弦相似度降序，支持多知识库 -->
+    <!-- 向量相似度检索：仅检索启用且未删除的分块，按余弦相似度降序；
+         范围为 knowledgeBaseIds（整库）与 documentIds（指定文档）的并集 -->
     <select id="searchSimilar" resultType="com.clj.ai.dto.ChunkSimilarityDto">
         SELECT c.id,
         c.document_id AS documentId,
@@ -46,17 +47,22 @@
         WHERE c.is_active = true
         AND c.is_deleted = false
         AND c.embedding IS NOT NULL
-        <if test="documentIds != null and documentIds.size() > 0">
-            AND c.document_id IN
-            <foreach collection="documentIds" item="documentId" open="(" separator="," close=")">
-                #{documentId}
-            </foreach>
-        </if>
-        <if test="(documentIds == null or documentIds.size() == 0) and knowledgeBaseIds != null and knowledgeBaseIds.size() > 0">
-            AND d.knowledge_base_id IN
-            <foreach collection="knowledgeBaseIds" item="kbId" open="(" separator="," close=")">
-                #{kbId}
-            </foreach>
+        <if test="(documentIds != null and documentIds.size() > 0) or (knowledgeBaseIds != null and knowledgeBaseIds.size() > 0)">
+            AND (
+            1 = 0
+            <if test="knowledgeBaseIds != null and knowledgeBaseIds.size() > 0">
+                OR d.knowledge_base_id IN
+                <foreach collection="knowledgeBaseIds" item="kbId" open="(" separator="," close=")">
+                    #{kbId}
+                </foreach>
+            </if>
+            <if test="documentIds != null and documentIds.size() > 0">
+                OR c.document_id IN
+                <foreach collection="documentIds" item="documentId" open="(" separator="," close=")">
+                    #{documentId}
+                </foreach>
+            </if>
+            )
         </if>
         ORDER BY c.embedding &lt;=&gt; #{queryVector,jdbcType=OTHER,typeHandler=com.clj.ai.config.PgVectorTypeHandler}
         LIMIT #{topK}

@@ -372,6 +372,9 @@
       </el-menu>
     </aside>
 
+    <!-- 移动端侧栏展开时的遮罩，点击收起菜单（仅窄屏显示） -->
+    <div v-if="!sidebarCollapsed" class="sidebar-mask" @click="sidebarCollapsed = true"></div>
+
     <!-- 主内容区域 -->
     <main class="main-content">
       <!-- 顶部导航栏 -->
@@ -590,10 +593,27 @@ onMounted(() => {
   }
   window.addEventListener('userInfoUpdated', handleUserInfoUpdate)
 
+  // 手机(≤600px)默认收起为抽屉，避免固定定位菜单遮挡内容；平板保留侧栏
+  const MOBILE_BREAKPOINT = 600
+  let wasMobile = window.innerWidth <= MOBILE_BREAKPOINT
+  if (wasMobile) {
+    sidebarCollapsed.value = true
+  }
+  // 仅在跨越断点时自动切换，桌面端手动收起的状态不受窗口缩放影响
+  const handleResize = () => {
+    const isMobile = window.innerWidth <= MOBILE_BREAKPOINT
+    if (isMobile !== wasMobile) {
+      wasMobile = isMobile
+      sidebarCollapsed.value = isMobile
+    }
+  }
+  window.addEventListener('resize', handleResize)
+
   // 清理事件监听
   onBeforeUnmount(() => {
     window.removeEventListener('userNameUpdated', handleUserNameUpdate)
     window.removeEventListener('userInfoUpdated', handleUserInfoUpdate)
+    window.removeEventListener('resize', handleResize)
   })
 })
 </script>
@@ -603,7 +623,14 @@ onMounted(() => {
   display: flex;
   width: 100%;
   height: 100vh;
+  /* 移动端浏览器工具栏不再遮挡底部内容 */
+  height: 100dvh;
   overflow: hidden;
+}
+
+/* 移动端侧栏遮罩（桌面端隐藏） */
+.sidebar-mask {
+  display: none;
 }
 
 /* 侧边栏 */
@@ -939,17 +966,93 @@ onMounted(() => {
   min-height: 0;
 }
 
-/* 响应式设计 */
+/* 响应式设计:平板/窄窗口(≤768px)保留侧栏,仅压缩周边区域 */
 @media screen and (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+    flex-shrink: 0;
+  }
+
+  .top-nav {
+    padding: 0 10px;
+  }
+
+  .menu-toggle {
+    margin-right: 8px;
+  }
+
+  .nav-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .page-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* 右上角只保留头像，昵称与角色隐藏，避免挤压页面标题 */
+  .user-meta,
+  .arrow-icon {
+    display: none;
+  }
+
+  .user-info {
+    padding: 4px;
+    gap: 0;
+  }
+
+  /* 标签栏改为单行横向滚动，避免换行占用过多高度 */
+  .tabs-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 6px 10px;
+    scrollbar-width: none;
+  }
+
+  .tabs-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-item {
+    flex: 0 0 auto;
+  }
+
+  .content-wrapper {
+    padding: 10px;
+  }
+}
+
+/* 手机(≤600px):侧栏改为滑出式抽屉，默认收起并配遮罩 */
+@media screen and (max-width: 600px) {
   .sidebar {
     position: fixed;
     left: 0;
     top: 0;
     z-index: 999;
+    width: 240px;
+    transition: left 0.3s;
   }
 
+  /* 整体滑出屏幕外，而不是 width:0 挤压 */
   .sidebar.collapsed {
+    width: 240px;
     left: -240px;
+  }
+
+  .sidebar.collapsed .logo,
+  .sidebar.collapsed .sidebar-menu {
+    visibility: visible;
+  }
+
+  .sidebar-mask {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 998;
+    background: rgba(0, 0, 0, 0.4);
   }
 }
 </style>

@@ -39,7 +39,7 @@
           </div>
 
           <div class="selection-summary">
-            <span>已选择 {{ selectedKnowledgeBaseIds.length }} 个知识库，{{ selectedDocumentIds.length }} 篇文档</span>
+            <span>已选择 {{ selectionTotals.knowledgeBaseCount }} 个知识库，{{ selectionTotals.documentCount }} 篇文档</span>
             <el-button text type="primary" @click="clearSelection">清空勾选</el-button>
           </div>
 
@@ -49,8 +49,6 @@
             class="knowledge-tree"
             node-key="key"
             show-checkbox
-            check-strictly
-            default-expand-all
             :data="treeData"
             :props="treeProps"
             empty-text="暂无知识库"
@@ -90,48 +88,89 @@
             <div class="section-heading">
               <div>
                 <strong>{{ activeKnowledgeBase.name }}</strong>
-                <span class="muted">文档管理</span>
+                <span class="muted">{{ activeDocument ? '文档信息' : '文档列表' }}</span>
               </div>
-              <el-upload
-                :show-file-list="false"
-                :multiple="true"
-                :accept="ragDocumentAccept"
-                :before-upload="validateRagDocument"
-                :http-request="uploadRagDocument"
-              >
-                <el-button type="primary" plain :loading="uploadingDocument">
-                  <el-icon><Upload /></el-icon>
-                  上传文档
+              <div class="section-actions">
+                <el-button v-if="activeDocument" text size="small" @click="activeDocumentId = null">
+                  <el-icon><ArrowLeft /></el-icon>
+                  返回文档列表
                 </el-button>
-              </el-upload>
+                <el-upload
+                  :show-file-list="false"
+                  :multiple="true"
+                  :accept="ragDocumentAccept"
+                  :before-upload="validateRagDocument"
+                  :http-request="uploadRagDocument"
+                >
+                  <el-button type="primary" plain :loading="uploadingDocument">
+                    <el-icon><Upload /></el-icon>
+                    上传文档
+                  </el-button>
+                </el-upload>
+              </div>
             </div>
-            <el-table :data="activeDocuments" size="small" border>
-              <el-table-column prop="name" label="文档名称" min-width="180" show-overflow-tooltip />
-              <el-table-column prop="fileType" label="类型" width="90" />
-              <el-table-column prop="chunkCount" label="Chunk" width="82" />
-              <el-table-column label="处理状态" width="100">
-                <template #default="{ row }">
-                  <el-tag size="small" :type="processStatusType(row.processStatus)">
-                    {{ processStatusLabel(row.processStatus) }}
+
+            <div v-if="activeDocument" class="document-detail">
+              <el-descriptions :column="2" size="small" border>
+                <el-descriptions-item label="文档名称">{{ activeDocument.name }}</el-descriptions-item>
+                <el-descriptions-item label="类型">{{ activeDocument.fileType || '-' }}</el-descriptions-item>
+                <el-descriptions-item label="大小">{{ formatFileSize(activeDocument.fileSize) }}</el-descriptions-item>
+                <el-descriptions-item label="分块数">{{ activeDocument.chunkCount }}</el-descriptions-item>
+                <el-descriptions-item label="处理状态">
+                  <el-tag size="small" :type="processStatusType(activeDocument.processStatus)">
+                    {{ processStatusLabel(activeDocument.processStatus) }}
                   </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column label="操作" width="132" fixed="right">
-                <template #default="{ row }">
-                  <el-button text size="small" title="重建索引" @click="reindexDocument(row)">
-                    <el-icon><Refresh /></el-icon>
-                  </el-button>
-                  <el-button text size="small" title="重命名" @click="renameDocument(row)">
-                    <el-icon><Edit /></el-icon>
-                  </el-button>
-                  <el-button text type="danger" size="small" title="删除文档" @click="removeDocument(row)">
-                    <el-icon><Delete /></el-icon>
-                  </el-button>
-                </template>
-              </el-table-column>
-            </el-table>
-            <el-empty v-if="!activeDocuments.length" description="暂无文档" :image-size="56" />
+                </el-descriptions-item>
+                <el-descriptions-item label="更新时间">
+                  {{ activeDocument.updatedTime || activeDocument.createdTime || '-' }}
+                </el-descriptions-item>
+              </el-descriptions>
+              <div class="detail-actions">
+                <el-button plain size="small" @click="reindexDocument(activeDocument)">
+                  <el-icon><Refresh /></el-icon>
+                  重建索引
+                </el-button>
+                <el-button plain size="small" @click="renameDocument(activeDocument)">
+                  <el-icon><Edit /></el-icon>
+                  重命名
+                </el-button>
+                <el-button type="danger" plain size="small" @click="removeDocument(activeDocument)">
+                  <el-icon><Delete /></el-icon>
+                  删除文档
+                </el-button>
+              </div>
+            </div>
+
+            <template v-else>
+              <el-table :data="activeDocuments" size="small" border>
+                <el-table-column prop="name" label="文档名称" min-width="180" show-overflow-tooltip />
+                <el-table-column prop="fileType" label="类型" width="90" />
+                <el-table-column prop="chunkCount" label="Chunk" width="82" />
+                <el-table-column label="处理状态" width="100">
+                  <template #default="{ row }">
+                    <el-tag size="small" :type="processStatusType(row.processStatus)">
+                      {{ processStatusLabel(row.processStatus) }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="132" fixed="right">
+                  <template #default="{ row }">
+                    <el-button text size="small" title="重建索引" @click="reindexDocument(row)">
+                      <el-icon><Refresh /></el-icon>
+                    </el-button>
+                    <el-button text size="small" title="重命名" @click="renameDocument(row)">
+                      <el-icon><Edit /></el-icon>
+                    </el-button>
+                    <el-button text type="danger" size="small" title="删除文档" @click="removeDocument(row)">
+                      <el-icon><Delete /></el-icon>
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+              <el-empty v-if="!activeDocuments.length" description="暂无文档" :image-size="56" />
+            </template>
           </section>
+          <el-empty v-else :image-size="56" description="点击知识库查看文档列表" class="section-placeholder" />
         </el-tab-pane>
 
         <el-tab-pane label="类型管理" name="types">
@@ -217,6 +256,7 @@
 <script setup>
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import {
+  ArrowLeft,
   Collection,
   Delete,
   Edit,
@@ -375,6 +415,47 @@ const activeKnowledgeBase = computed(() =>
   knowledgeBases.value.find((item) => String(item.id) === String(activeKnowledgeBaseId.value)),
 )
 const activeDocuments = computed(() => documentsByBaseId.value[activeKnowledgeBaseId.value] || [])
+const activeDocumentId = ref(null)
+const activeDocument = computed(() =>
+  activeDocumentId.value
+    ? activeDocuments.value.find((doc) => String(doc.id) === String(activeDocumentId.value)) || null
+    : null,
+)
+/** 文档 id → 所属知识库 id，用于区分"整库全选"与"库内部分勾选" */
+const docToKbId = computed(() => {
+  const map = {}
+  treeData.value.forEach((kb) => kb.children.forEach((doc) => { map[doc.id] = kb.id }))
+  return map
+})
+/**
+ * 范围统计：
+ * - 知识库数量 = 整库勾选的库 + 含部分勾选文档的库
+ * - 文档数量 = 整库勾选库的全部文档数 + 单独勾选的文档数
+ */
+const selectionTotals = computed(() => {
+  const fullIds = selectedKnowledgeBaseIds.value
+  const partialKbIds = new Set(
+    selectedDocumentIds.value
+      .map((id) => docToKbId.value[id])
+      .filter((kbId) => kbId && !fullIds.includes(kbId)),
+  )
+  const fullDocs = fullIds.reduce(
+    (sum, kbId) =>
+      sum + toCount(knowledgeBases.value.find((base) => String(base.id) === String(kbId))?.documentCount),
+    0,
+  )
+  return {
+    knowledgeBaseCount: fullIds.length + partialKbIds.size,
+    documentCount: fullDocs + selectedDocumentIds.value.length,
+  }
+})
+const formatFileSize = (value) => {
+  const size = toCount(value)
+  if (!size) return '-'
+  if (size < 1024) return `${size} B`
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
+  return `${(size / 1024 / 1024).toFixed(2)} MB`
+}
 
 const normalizeSelection = (baseIds = [], documentIds = []) => ({
   knowledgeBaseIds: [...new Set((Array.isArray(baseIds) ? baseIds : []).map(toId).filter(Boolean))],
@@ -384,7 +465,7 @@ const setSelection = (baseIds = props.selectedKnowledgeBaseIds, documentIds = pr
   const selection = normalizeSelection(baseIds, documentIds)
   selectedKnowledgeBaseIds.value = selection.knowledgeBaseIds
   selectedDocumentIds.value = selection.documentIds
-  if (notify) emit('selection-change', selection)
+  if (notify) emit('selection-change', { ...selection, ...selectionTotals.value })
 }
 
 const syncTreeSelection = async () => {
@@ -396,24 +477,38 @@ const syncTreeSelection = async () => {
   ])
 }
 
+/**
+ * 级联勾选语义：
+ * - 勾选知识库 → 其下文档全部选中，按知识库整体范围检索（不逐篇枚举）
+ * - 只勾某库部分文档 → 该库呈半选状态，检索仅基于选中的文档
+ * - 某库文档全部取消 → 知识库自动取消勾选
+ */
 const handleTreeCheck = (_data, details) => {
   const checkedKeys = details?.checkedKeys || treeRef.value?.getCheckedKeys() || []
-  setSelection(
-    checkedKeys
-      .filter((key) => String(key).startsWith('kb-'))
-      .map((key) => String(key).slice(3)),
-    checkedKeys
-      .filter((key) => String(key).startsWith('doc-'))
-      .map((key) => String(key).slice(4)),
-    true,
-  )
+  const kbIds = checkedKeys
+    .filter((key) => String(key).startsWith('kb-'))
+    .map((key) => String(key).slice(3))
+  const docIds = checkedKeys
+    .filter((key) => String(key).startsWith('doc-'))
+    .map((key) => String(key).slice(4))
+  // 整库全选时其文档也在 checkedKeys 中，但只需上报知识库 id
+  const fullKbSet = new Set(kbIds)
+  setSelection(kbIds, docIds.filter((id) => !fullKbSet.has(docToKbId.value[id])), true)
 }
 const clearSelection = () => {
   setSelection([], [], true)
   treeRef.value?.setCheckedKeys([])
 }
-const handleNodeClick = (data) => {
-  activeKnowledgeBaseId.value = data.kind === 'knowledge-base' ? data.id : data.raw.knowledgeBaseId
+const handleNodeClick = (data, node) => {
+  if (data.kind === 'knowledge-base') {
+    activeKnowledgeBaseId.value = data.id
+    activeDocumentId.value = null
+    // 点击知识库才展开/收起其文档列表
+    if (node) node.expanded = !node.expanded
+  } else {
+    activeKnowledgeBaseId.value = data.raw.knowledgeBaseId
+    activeDocumentId.value = data.id
+  }
 }
 const processStatusLabel = (status) => {
   const map = {
@@ -481,10 +576,21 @@ const loadKnowledgeBases = async () => {
     })
     knowledgeBases.value = extractList(response).map(normalizeBase)
     await Promise.all(knowledgeBases.value.map((base) => loadDocuments(base)))
+    // 不再默认选中第一个知识库：点击知识库节点才展示其文档列表
     const activeExists = knowledgeBases.value.some(
       (base) => String(base.id) === String(activeKnowledgeBaseId.value),
     )
-    if (!activeExists) activeKnowledgeBaseId.value = knowledgeBases.value[0]?.id ?? null
+    if (!activeExists) {
+      activeKnowledgeBaseId.value = null
+      activeDocumentId.value = null
+    } else if (
+      activeDocumentId.value &&
+      !(documentsByBaseId.value[activeKnowledgeBaseId.value] || []).some(
+        (doc) => String(doc.id) === String(activeDocumentId.value),
+      )
+    ) {
+      activeDocumentId.value = null
+    }
   } catch (error) {
     ElMessage.error(getErrorMessage(error, '加载知识库失败'))
   } finally {
@@ -643,6 +749,7 @@ const removeDocument = async (document) => {
       cancelButtonText: '取消',
     })
     await $API.deleteRagDocument(document.id)
+    if (String(activeDocumentId.value) === String(document.id)) activeDocumentId.value = null
     documentsByBaseId.value = {
       ...documentsByBaseId.value,
       [activeKnowledgeBaseId.value]: activeDocuments.value.filter((item) => item.id !== document.id),
@@ -726,6 +833,10 @@ onMounted(() => {
 .section-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .section-heading strong { margin-right: 8px; color: #1f2937; }
 .muted { color: #9ca3af; font-size: 12px; }
+.section-actions { display: flex; align-items: center; gap: 8px; }
+.document-detail { padding: 14px; border: 1px solid #ebeef5; border-radius: 8px; background: #fafbfd; }
+.detail-actions { display: flex; gap: 8px; margin-top: 12px; }
+.section-placeholder { margin-top: 24px; }
 .el-table { width: 100%; }
 @media (max-width: 640px) {
   .toolbar { flex-wrap: wrap; }

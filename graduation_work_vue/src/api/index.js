@@ -781,9 +781,6 @@ const api = {
   getChatHistory() {
     return this.listConversations()
   },
-  clearChatHistory() {
-    return request({ url: '/ai/conversations', method: 'delete' })
-  },
 
   // 设备报修申请相关 (EquipmentRepairApplyController)
   addEquipmentRepairApply(data) {

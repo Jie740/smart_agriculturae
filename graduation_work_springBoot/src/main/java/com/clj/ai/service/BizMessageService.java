@@ -12,7 +12,6 @@ import java.util.List;
 public interface BizMessageService extends IService<BizMessage> {
     List<BizMessage> listByConversationId(Long conversationId);
     List<BizMessage> listRecentByConversationId(Long conversationId, int limit);
-    void retainLatest(Long conversationId, Long userId, int limit, BizConversationService conversationService);
     void deleteOwned(Long id, Long userId, BizConversationService conversationService);
     void deleteAfter(Long id, Long userId, BizConversationService conversationService);
     void replaceUserMessage(Long id, Long userId, String text, BizConversationService conversationService);

@@ -47,29 +47,6 @@ public class BizMessageServiceImpl extends ServiceImpl<BizMessageMapper, BizMess
     }
 
     @Override
-    public void retainLatest(Long conversationId, Long userId, int limit,
-                             BizConversationService conversationService) {
-        if (conversationId == null || limit < 0
-                || conversationService.getOwned(conversationId, userId) == null) {
-            throw new IllegalArgumentException("浼氳瘽涓嶅瓨鍦?");
-        }
-        List<BizMessage> all = lambdaQuery()
-                .eq(BizMessage::getConversationId, conversationId)
-                .eq(BizMessage::getIsDeleted, false)
-                .orderByDesc(BizMessage::getCreatedTime)
-                .orderByDesc(BizMessage::getId)
-                .list();
-        Date now = new Date();
-        for (int i = Math.min(limit, all.size()); i < all.size(); i++) {
-            BizMessage message = all.get(i);
-            message.setIsDeleted(true);
-            message.setUpdatedBy(userId);
-            message.setUpdatedTime(now);
-            updateById(message);
-        }
-    }
-
-    @Override
     public void deleteOwned(Long id, Long userId, BizConversationService conversationService) {
         BizMessage message = getById(id);
         if (message == null || !isOwned(message, userId, conversationService)) {

@@ -125,13 +125,11 @@ public class ChatController {
         Runnable saveAssistant = () -> {
             saveUser.run();
             if (!assistantSaved.compareAndSet(false, true) || generated.isEmpty()) {
-                messageService.retainLatest(conversation.getId(), userId, 10, conversationService);
                 touchConversation(conversation, userId);
                 chatMemoryStore.evict(memoryId);
                 return;
             }
             saveMessage(conversation.getId(), userId, "AI", generated.toString(), null, null, null);
-            messageService.retainLatest(conversation.getId(), userId, 10, conversationService);
             touchConversation(conversation, userId);
             chatMemoryStore.evict(memoryId);
         };

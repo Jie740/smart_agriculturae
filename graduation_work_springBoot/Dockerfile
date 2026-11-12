@@ -1,12 +1,26 @@
+
 FROM maven:3.9-eclipse-temurin-17 AS build
 
 WORKDIR /build
 
-COPY pom.xml .
-RUN mvn -B -Dmaven.test.skip=true dependency:go-offline
+# 配置 Maven 国内镜像
+COPY settings.xml /root/.m2/settings.xml
 
+# 先复制依赖配置，利用 Docker 缓存
+COPY pom.xml .
+
+# 下载依赖
+RUN mvn -s /root/.m2/settings.xml \
+    -B -Dmaven.test.skip=true \
+    dependency:go-offline
+
+# 复制源代码
 COPY src ./src
-RUN mvn -B -Dmaven.test.skip=true clean package dependency:copy-dependencies \
+
+# 编译打包
+RUN mvn -s /root/.m2/settings.xml \
+    -B -Dmaven.test.skip=true \
+    clean package dependency:copy-dependencies \
     -DincludeScope=runtime \
     -DoutputDirectory=target/dependency
 
